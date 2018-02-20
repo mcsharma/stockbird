@@ -7375,7 +7375,9 @@
 	        });
 	        var profitText = '';
 	        var profit = isFetching ? null : totalValue - totalBasis;
-	        var hasProfit = isFetching ? null : totalValue > totalBasis;
+	        var isNeutral = isFetching || Math.abs(totalBasis - totalValue) < 1e-6;
+	        var hasProfit = !isNeutral && totalValue > totalBasis;
+	        var hasLoss = !isNeutral && totalValue < totalBasis;
 	        if (profit !== null) {
 	            profitText = profit.toFixed(2);
 	            if (hasProfit) {
@@ -7383,13 +7385,13 @@
 	            }
 	        }
 	        var profitPercent = null;
-	        if (profit !== null) {
+	        if (profit !== null && totalBasis > 0) {
 	            profitPercent = (profit / totalBasis * 100).toFixed(2);
 	        }
 	        return React.createElement("div", { className: "pf-summary" },
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Gain/Loss"),
-	                React.createElement("div", { className: classNames({ 'pf-color-red': !hasProfit, 'pf-color-green': hasProfit }) },
+	                React.createElement("div", { className: classNames({ 'pf-color-red': hasLoss, 'pf-color-green': hasProfit }) },
 	                    isFetching ? '...' : util_1.numberWithCommas(profitText),
 	                    " ",
 	                    profitPercent === null ? '' : '(' + profitPercent + '%)')),
