@@ -5,6 +5,8 @@ import '../../css/pf-aggregated-row.less';
 
 import classNames = require('classnames');
 import {numberWithCommas} from '../util';
+import {PFDispatcher} from '../dispatcher/PFDispatcher';
+import PFActionTypes from '../types/PFActionTypes';
 
 type Props = {
   transactions: PFTradeItem[],
@@ -23,6 +25,23 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
 
   _onClick = () => {
     this.setState({expanded: !this.state.expanded});
+  };
+
+  _onRowDeleteClick = (event, symbol, index) => {
+    event.stopPropagation();
+    PFDispatcher.dispatch({
+      type: PFActionTypes.UNSOLD_DELETE_ROW,
+      symbol,
+      index,
+    })
+  };
+
+  _onRowDeleteAllClick = (event, symbol) => {
+    event.stopPropagation();
+    PFDispatcher.dispatch({
+      type: PFActionTypes.UNSOLD_DELETE_SYMBOL,
+      symbol,
+    });
   };
 
   render() {
@@ -60,6 +79,9 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
           }
         )}>
         {totalValue === null ? '...' : numberWithCommas((totalValue - totalBasis).toFixed(2))}</div>
+      <div className="pf-row-actions">
+        <a href="#" onClick={(event) => this._onRowDeleteAllClick(event, symbol)}>delete</a>
+      </div>
     </div>);
 
 
@@ -83,6 +105,9 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
                     'pf-color-green': curPrice !== null && curPrice > row.basis
                   })}
                 > {curPrice ? numberWithCommas(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'}</div>
+                <div className="pf-row-actions">
+                  <a href="#" onClick={(event) => this._onRowDeleteClick(event, symbol, index)}>delete</a>
+                </div>
               </div>);
             }
           )}</div>

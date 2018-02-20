@@ -1951,14 +1951,17 @@
 	                    isNaN(+draftItem.basis)) {
 	                    return state;
 	                }
+	                var realItem = new pf_trade_items_1.PFTradeItem({
+	                    symbol: draftItem.symbol,
+	                    quantity: +draftItem.quantity,
+	                    basis: +draftItem.basis,
+	                });
 	                if (!assets.get(symbol)) {
-	                    assets = assets.set(symbol, immutable_1.List.of(draftItem));
+	                    assets = assets.set(symbol, immutable_1.List.of(realItem));
 	                }
 	                else {
-	                    assets = assets.set(symbol, assets.get(symbol).push(draftItem));
+	                    assets = assets.set(symbol, assets.get(symbol).push(realItem));
 	                }
-	                assets = assets.delete('');
-	                assets = assets.delete('MSFT');
 	                state = state.set('assets', assets);
 	                state = state.set('draftItem', null);
 	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
@@ -1973,7 +1976,14 @@
 	                else {
 	                    assets = assets.set(action.symbol, items);
 	                }
-	                return state.set('assets', assets);
+	                state = state.set('assets', assets);
+	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
+	                return state;
+	            case PFActionTypes_1.default.UNSOLD_DELETE_SYMBOL:
+	                assets = assets.delete(action.symbol);
+	                state = state.set('assets', assets);
+	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
+	                return state;
 	            default:
 	                return state;
 	        }
@@ -7296,6 +7306,7 @@
 	    UNSOLD_QUANTITY_UPDATE: 'UNSOLD_QUANTITY_UPDATE',
 	    UNSOLD_BASIS_UPDATE: 'UNSOLD_BASIS_UPDATE',
 	    UNSOLD_DELETE_ROW: 'UNSOLD_DELETE_ROW',
+	    UNSOLD_DELETE_SYMBOL: 'UNSOLD_DELETE_SYMBOL',
 	    COOKIE_DATA_LOADED: 'COOKIE_DATA_LOADED',
 	    MARKET_DATA_UPDATE: 'MARKET_DATA_UPDATE',
 	};
@@ -7747,6 +7758,8 @@
 	__webpack_require__(47);
 	var classNames = __webpack_require__(37);
 	var util_1 = __webpack_require__(38);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
 	var PFAggregatedAssetRow = /** @class */ (function (_super) {
 	    __extends(PFAggregatedAssetRow, _super);
 	    function PFAggregatedAssetRow() {
@@ -7757,9 +7770,25 @@
 	        _this._onClick = function () {
 	            _this.setState({ expanded: !_this.state.expanded });
 	        };
+	        _this._onRowDeleteClick = function (event, symbol, index) {
+	            event.stopPropagation();
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_DELETE_ROW,
+	                symbol: symbol,
+	                index: index,
+	            });
+	        };
+	        _this._onRowDeleteAllClick = function (event, symbol) {
+	            event.stopPropagation();
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_DELETE_SYMBOL,
+	                symbol: symbol,
+	            });
+	        };
 	        return _this;
 	    }
 	    PFAggregatedAssetRow.prototype.render = function () {
+	        var _this = this;
 	        var expanded = this.state.expanded;
 	        var symbol = this.props.transactions[0].symbol;
 	        var curPrice = this.props.marketData[symbol] ? this.props.marketData[symbol].realtime : null;
@@ -7782,7 +7811,9 @@
 	                    'pf-row-gain': true,
 	                    'pf-color-red': totalValue < totalBasis,
 	                    'pf-color-green': totalValue > totalBasis
-	                }) }, totalValue === null ? '...' : util_1.numberWithCommas((totalValue - totalBasis).toFixed(2)))));
+	                }) }, totalValue === null ? '...' : util_1.numberWithCommas((totalValue - totalBasis).toFixed(2))),
+	            React.createElement("div", { className: "pf-row-actions" },
+	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
 	        return (React.createElement("div", { className: "pf-item", key: symbol, onClick: this._onClick },
 	            summaryRow,
 	            expanded ?
@@ -7799,7 +7830,9 @@
 	                                'pf-color-green': curPrice !== null && curPrice > row.basis
 	                            }) },
 	                            " ",
-	                            curPrice ? util_1.numberWithCommas(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...')));
+	                            curPrice ? util_1.numberWithCommas(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'),
+	                        React.createElement("div", { className: "pf-row-actions" },
+	                            React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteClick(event, symbol, index); } }, "delete"))));
 	                }))
 	                : null));
 	    };

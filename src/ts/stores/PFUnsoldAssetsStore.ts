@@ -44,7 +44,7 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
       case PFActionTypes.UNSOLD_DRAFT_DELETE:
         return state.set('draftItem', null) as State;
       case PFActionTypes.UNSOLD_DRAFT_SAVE:
-        const draftItem = state.get('draftItem') as PFTradeDraftItem;
+        let draftItem = state.get('draftItem') as PFTradeDraftItem;
         const symbol = draftItem.symbol;
         if (!symbol ||
           !symbol.match(/^[A-Z]+$/) ||
@@ -53,13 +53,16 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
           isNaN(+draftItem.basis)) {
           return state;
         }
+        const realItem = new PFTradeItem({
+          symbol: draftItem.symbol,
+          quantity: +draftItem.quantity,
+          basis: +draftItem.basis,
+        });
         if (!assets.get(symbol)) {
-          assets = assets.set(symbol, List.of(draftItem));
+          assets = assets.set(symbol, List.of(realItem));
         } else {
-          assets = assets.set(symbol, assets.get(symbol).push(draftItem));
+          assets = assets.set(symbol, assets.get(symbol).push(realItem));
         }
-        assets = assets.delete('');
-        assets = assets.delete('MSFT');
         state = state.set('assets', assets) as State;
         state = state.set('draftItem', null) as State;
         setCookie('assets', JSON.stringify(state.assets));
@@ -73,7 +76,14 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
         } else {
           assets = assets.set(action.symbol, items);
         }
-        return state.set('assets', assets) as State;
+        state = state.set('assets', assets) as State;
+        setCookie('assets', JSON.stringify(state.assets));
+        return state;
+      case PFActionTypes.UNSOLD_DELETE_SYMBOL:
+        assets = assets.delete(action.symbol);
+        state = state.set('assets', assets) as State;
+        setCookie('assets', JSON.stringify(state.assets));
+        return state;
       default:
         return state;
     }
