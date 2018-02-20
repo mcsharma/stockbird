@@ -59,7 +59,7 @@ export class PFSummary extends React.Component<Props> {
       </div>
       <div>
         <div className="pf-summary-item-label">Total Value</div>
-        <div> {isFetching ? 'fetching...' : numberWithCommas(totalValue.toFixed(2))}</div>
+        <div> {isFetching ? '...' : numberWithCommas(totalValue.toFixed(2))}</div>
       </div>
       <div>
         <div className="pf-summary-item-label">Cost Basis</div>

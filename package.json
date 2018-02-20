@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Web App to manage stocks portfolio",
   "main": "./dist/bundle.js",
   "dependencies": {

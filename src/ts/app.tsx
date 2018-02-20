@@ -12,7 +12,11 @@ const mutableAssets = JSON.parse(getCookie('assets') || '{}');
 
 const assets = OrderedMap(mutableAssets)
   .map((rows, symbol) => List(rows).map(
-    row => new PFTradeItem(row)
+    (row: any) => {
+      row.quantity = +row.quantity;
+      row.basis = +row.basis;
+      return new PFTradeItem(row)
+    }
   ));
 
 PFDispatcher.dispatch({

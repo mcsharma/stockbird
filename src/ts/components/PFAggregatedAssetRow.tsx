@@ -71,9 +71,9 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
               return (<div className="pf-row" key={index}>
                 <div className="pf-row-symbol" style={{visibility: 'hidden'}}>{symbol}</div>
                 <div className="pf-row-price" style={{visibility: 'hidden'}}>
-                  {curPrice !== null ? curPrice.toFixed(2) : '...'}</div>
+                  {curPrice !== null ? numberWithCommas(curPrice.toFixed(2)) : '...'}</div>
                 <div className="pf-row-quantity">{numberWithCommas(row.quantity)}</div>
-                <div className="pf-row-basis">{numberWithCommas(row.basis)}</div>
+                <div className="pf-row-basis">{numberWithCommas(row.basis.toFixed(2))}</div>
                 <div
                   className="pf-row-current-value">{curPrice ? numberWithCommas((curPrice * row.quantity).toFixed(2)) : '...'}</div>
                 <div

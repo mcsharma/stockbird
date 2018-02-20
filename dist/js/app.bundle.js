@@ -57,7 +57,11 @@
 	var PFActionTypes_1 = __webpack_require__(32);
 	var mutableAssets = JSON.parse(cookies_1.getCookie('assets') || '{}');
 	var assets = immutable_1.OrderedMap(mutableAssets)
-	    .map(function (rows, symbol) { return immutable_1.List(rows).map(function (row) { return new pf_trade_items_1.PFTradeItem(row); }); });
+	    .map(function (rows, symbol) { return immutable_1.List(rows).map(function (row) {
+	    row.quantity = +row.quantity;
+	    row.basis = +row.basis;
+	    return new pf_trade_items_1.PFTradeItem(row);
+	}); });
 	PFDispatcher_1.PFDispatcher.dispatch({
 	    type: PFActionTypes_1.default.COOKIE_DATA_LOADED,
 	    assets: assets,
@@ -7399,7 +7403,7 @@
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Total Value"),
 	                React.createElement("div", null,
 	                    " ",
-	                    isFetching ? 'fetching...' : util_1.numberWithCommas(totalValue.toFixed(2)))),
+	                    isFetching ? '...' : util_1.numberWithCommas(totalValue.toFixed(2)))),
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Cost Basis"),
 	                React.createElement("div", null,
@@ -7785,9 +7789,9 @@
 	                React.createElement("div", { style: { marginTop: '8px' } }, this.props.transactions.map(function (row, index) {
 	                    return (React.createElement("div", { className: "pf-row", key: index },
 	                        React.createElement("div", { className: "pf-row-symbol", style: { visibility: 'hidden' } }, symbol),
-	                        React.createElement("div", { className: "pf-row-price", style: { visibility: 'hidden' } }, curPrice !== null ? curPrice.toFixed(2) : '...'),
+	                        React.createElement("div", { className: "pf-row-price", style: { visibility: 'hidden' } }, curPrice !== null ? util_1.numberWithCommas(curPrice.toFixed(2)) : '...'),
 	                        React.createElement("div", { className: "pf-row-quantity" }, util_1.numberWithCommas(row.quantity)),
-	                        React.createElement("div", { className: "pf-row-basis" }, util_1.numberWithCommas(row.basis)),
+	                        React.createElement("div", { className: "pf-row-basis" }, util_1.numberWithCommas(row.basis.toFixed(2))),
 	                        React.createElement("div", { className: "pf-row-current-value" }, curPrice ? util_1.numberWithCommas((curPrice * row.quantity).toFixed(2)) : '...'),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-row-gain': true,
@@ -7862,9 +7866,9 @@
 	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
 	            data: data,
 	        });
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 10000);
+	        setTimeout(function () { return recursivelyFetchStockData(); }, 5000);
 	    }, function (error) {
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 10000);
+	        setTimeout(function () { return recursivelyFetchStockData(); }, 5000);
 	    });
 	}
 	exports.recursivelyFetchStockData = recursivelyFetchStockData;

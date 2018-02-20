@@ -15,9 +15,9 @@ export function recursivelyFetchStockData() {
       type: PFActionTypes.MARKET_DATA_UPDATE,
       data,
     });
-    setTimeout(() => recursivelyFetchStockData(), 10000);
+    setTimeout(() => recursivelyFetchStockData(), 5000);
   }, (error) => {
-    setTimeout(() => recursivelyFetchStockData(), 10000);
+    setTimeout(() => recursivelyFetchStockData(), 5000);
   });
 }
 
