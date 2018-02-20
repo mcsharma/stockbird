@@ -50,7 +50,7 @@
 	var ReactDOM = __webpack_require__(5);
 	var React = __webpack_require__(6);
 	var PFRoot_1 = __webpack_require__(7);
-	var cookies_1 = __webpack_require__(33);
+	var cookies_1 = __webpack_require__(34);
 	var immutable_1 = __webpack_require__(27);
 	var pf_trade_items_1 = __webpack_require__(28);
 	var PFDispatcher_1 = __webpack_require__(29);
@@ -108,9 +108,9 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	var PFSummaryContainer_1 = __webpack_require__(8);
-	__webpack_require__(40);
-	var PFUnsoldStocksContainer_1 = __webpack_require__(42);
-	var stock_data_fetch_1 = __webpack_require__(49);
+	__webpack_require__(41);
+	var PFUnsoldStocksContainer_1 = __webpack_require__(43);
+	var stock_data_fetch_1 = __webpack_require__(51);
 	var PFRoot = /** @class */ (function (_super) {
 	    __extends(PFRoot, _super);
 	    function PFRoot(props) {
@@ -162,8 +162,8 @@
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFSummary_1 = __webpack_require__(34);
-	var PFMarketDataStore_1 = __webpack_require__(39);
+	var PFSummary_1 = __webpack_require__(35);
+	var PFMarketDataStore_1 = __webpack_require__(40);
 	var PFSummaryContainer = /** @class */ (function (_super) {
 	    __extends(PFSummaryContainer, _super);
 	    function PFSummaryContainer() {
@@ -1901,10 +1901,12 @@
 	var pf_trade_items_1 = __webpack_require__(28);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var cookies_1 = __webpack_require__(33);
+	var types_1 = __webpack_require__(33);
+	var cookies_1 = __webpack_require__(34);
 	var DEFAULT_STATE = {
 	    assets: immutable_1.OrderedMap(),
 	    draftItem: null,
+	    priceDisplayMode: types_1.PriceDisplayMode.PERCENT_CHANGE,
 	};
 	var State = /** @class */ (function (_super) {
 	    __extends(State, _super);
@@ -1983,6 +1985,9 @@
 	                assets = assets.delete(action.symbol);
 	                state = state.set('assets', assets);
 	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
+	                return state;
+	            case PFActionTypes_1.default.UNSOLD_PRICE_DISPLAY_MODE_CHANGE:
+	                state = state.set('priceDisplayMode', (state.priceDisplayMode + 1) % 2);
 	                return state;
 	            default:
 	                return state;
@@ -7307,6 +7312,7 @@
 	    UNSOLD_BASIS_UPDATE: 'UNSOLD_BASIS_UPDATE',
 	    UNSOLD_DELETE_ROW: 'UNSOLD_DELETE_ROW',
 	    UNSOLD_DELETE_SYMBOL: 'UNSOLD_DELETE_SYMBOL',
+	    UNSOLD_PRICE_DISPLAY_MODE_CHANGE: 'UNSOLD_PRICE_DISPLAY_MODE_CHANGE',
 	    COOKIE_DATA_LOADED: 'COOKIE_DATA_LOADED',
 	    MARKET_DATA_UPDATE: 'MARKET_DATA_UPDATE',
 	};
@@ -7315,6 +7321,19 @@
 
 /***/ }),
 /* 33 */
+/***/ (function(module, exports) {
+
+	"use strict";
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var PriceDisplayMode;
+	(function (PriceDisplayMode) {
+	    PriceDisplayMode[PriceDisplayMode["PER_SHARE_PRICE"] = 0] = "PER_SHARE_PRICE";
+	    PriceDisplayMode[PriceDisplayMode["PERCENT_CHANGE"] = 1] = "PERCENT_CHANGE";
+	})(PriceDisplayMode = exports.PriceDisplayMode || (exports.PriceDisplayMode = {}));
+
+
+/***/ }),
+/* 34 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -7345,7 +7364,7 @@
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7361,9 +7380,9 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(35);
-	var classNames = __webpack_require__(37);
-	var util_1 = __webpack_require__(38);
+	__webpack_require__(36);
+	var classNames = __webpack_require__(38);
+	var util_1 = __webpack_require__(39);
 	var PFSummary = /** @class */ (function (_super) {
 	    __extends(PFSummary, _super);
 	    function PFSummary() {
@@ -7385,7 +7404,7 @@
 	                    isFetching = true;
 	                    return;
 	                }
-	                totalValue += row.quantity * symbolData.realtime;
+	                totalValue += row.quantity * symbolData.latestPrice;
 	            });
 	        });
 	        var profitText = '';
@@ -7407,19 +7426,19 @@
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Gain/Loss"),
 	                React.createElement("div", { className: classNames({ 'pf-color-red': hasLoss, 'pf-color-green': hasProfit }) },
-	                    isFetching ? '...' : util_1.numberWithCommas(profitText),
+	                    isFetching ? '...' : util_1.format(profitText),
 	                    " ",
 	                    profitPercent === null ? '' : '(' + profitPercent + '%)')),
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Total Value"),
 	                React.createElement("div", null,
 	                    " ",
-	                    isFetching ? '...' : util_1.numberWithCommas(totalValue.toFixed(2)))),
+	                    isFetching ? '...' : util_1.format(totalValue.toFixed(2)))),
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Cost Basis"),
 	                React.createElement("div", null,
 	                    " ",
-	                    util_1.numberWithCommas(totalBasis.toFixed(2)))));
+	                    util_1.format(totalBasis.toFixed(2)))));
 	    };
 	    return PFSummary;
 	}(React.Component));
@@ -7427,14 +7446,14 @@
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 36 */,
-/* 37 */
+/* 37 */,
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -7488,19 +7507,19 @@
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
-	function numberWithCommas(x) {
+	function format(x) {
 	    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
-	exports.numberWithCommas = numberWithCommas;
+	exports.format = format;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7550,14 +7569,14 @@
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 41 */,
-/* 42 */
+/* 42 */,
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7583,8 +7602,8 @@
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFUnsoldStocks_1 = __webpack_require__(43);
-	var PFMarketDataStore_1 = __webpack_require__(39);
+	var PFUnsoldStocks_1 = __webpack_require__(44);
+	var PFMarketDataStore_1 = __webpack_require__(40);
 	var PFUnsoldStocksContainer = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocksContainer, _super);
 	    function PFUnsoldStocksContainer() {
@@ -7600,6 +7619,7 @@
 	            assets: state.get('assets').toArray().map(function (item) { return item.toArray(); }),
 	            draftItem: state.get('draftItem'),
 	            marketData: marketState.marketData,
+	            priceDisplayMode: state.priceDisplayMode,
 	        };
 	    };
 	    PFUnsoldStocksContainer.prototype.render = function () {
@@ -7611,7 +7631,7 @@
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7627,10 +7647,10 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(44);
+	__webpack_require__(45);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFAggregatedAssetRow_1 = __webpack_require__(46);
+	var PFAggregatedAssetRow_1 = __webpack_require__(47);
 	var PFUnsoldStocks = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocks, _super);
 	    function PFUnsoldStocks() {
@@ -7706,7 +7726,7 @@
 	            if (assetRows.length === 0) {
 	                return null;
 	            }
-	            return (React.createElement(PFAggregatedAssetRow_1.PFAggregatedAssetRow, { key: assetRows[0].symbol, transactions: assetRows, marketData: _this.props.marketData }));
+	            return (React.createElement(PFAggregatedAssetRow_1.PFAggregatedAssetRow, { key: assetRows[0].symbol, transactions: assetRows, marketData: _this.props.marketData, priceDisplayMode: _this.props.priceDisplayMode }));
 	        }));
 	        var draftItem = null, addButton = null;
 	        if (this.props.draftItem) {
@@ -7718,7 +7738,7 @@
 	                React.createElement("button", { onClick: this._onDeleteDraft }, "Delete")));
 	        }
 	        else {
-	            addButton = React.createElement("button", { onClick: this._onAddClick }, "Add Entry");
+	            addButton = React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry");
 	        }
 	        return (React.createElement("div", { className: "pf-unsold-card" },
 	            header,
@@ -7732,14 +7752,14 @@
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 45 */,
-/* 46 */
+/* 46 */,
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7755,11 +7775,12 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(47);
-	var classNames = __webpack_require__(37);
-	var util_1 = __webpack_require__(38);
+	__webpack_require__(48);
+	var classNames = __webpack_require__(38);
+	var util_1 = __webpack_require__(39);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
+	var PFStockPriceTag_1 = __webpack_require__(50);
 	var PFAggregatedAssetRow = /** @class */ (function (_super) {
 	    __extends(PFAggregatedAssetRow, _super);
 	    function PFAggregatedAssetRow() {
@@ -7791,8 +7812,11 @@
 	        var _this = this;
 	        var expanded = this.state.expanded;
 	        var symbol = this.props.transactions[0].symbol;
-	        var curPrice = this.props.marketData[symbol] ? this.props.marketData[symbol].realtime : null;
-	        var priceIncreased = curPrice !== null && curPrice > this.props.marketData[symbol].lastDayClose;
+	        var symbolData = this.props.marketData[symbol];
+	        var curPrice = symbolData && symbolData.latestPrice
+	            || null;
+	        var lastClose = symbolData && symbolData.previousClose
+	            || null;
 	        var totalQuantity = 0, totalBasis = 0;
 	        this.props.transactions.forEach(function (transaction) {
 	            totalQuantity += transaction.quantity;
@@ -7801,17 +7825,19 @@
 	        var avgPrice = totalBasis / totalQuantity;
 	        var totalValue = curPrice === null ? null : (curPrice * totalQuantity);
 	        var summaryRow = (React.createElement("div", { className: "pf-row" },
-	            React.createElement("div", { className: "pf-row-symbol" }, symbol),
+	            React.createElement("div", { className: "pf-row-symbol" },
+	                React.createElement("div", null, symbol),
+	                React.createElement("div", { className: "pf-company-name" }, symbolData && symbolData.companyName)),
 	            React.createElement("div", { className: 'pf-row-price' },
-	                React.createElement("div", { className: classNames({ 'pf-price': true, 'pf-price-green': priceIncreased, 'pf-price-red': !priceIncreased }) }, curPrice !== null ? util_1.numberWithCommas(curPrice.toFixed(2)) : '...')),
-	            React.createElement("div", { className: "pf-row-quantity" }, util_1.numberWithCommas(totalQuantity)),
-	            React.createElement("div", { className: "pf-row-basis" }, util_1.numberWithCommas(avgPrice.toFixed(2))),
-	            React.createElement("div", { className: "pf-row-current-value" }, totalValue === null ? '...' : util_1.numberWithCommas(totalValue.toFixed(2))),
+	                React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode })),
+	            React.createElement("div", { className: "pf-row-quantity" }, util_1.format(totalQuantity)),
+	            React.createElement("div", { className: "pf-row-basis" }, util_1.format(avgPrice.toFixed(2))),
+	            React.createElement("div", { className: "pf-row-current-value" }, totalValue === null ? '...' : util_1.format(totalValue.toFixed(2))),
 	            React.createElement("div", { className: classNames({
 	                    'pf-row-gain': true,
 	                    'pf-color-red': totalValue < totalBasis,
 	                    'pf-color-green': totalValue > totalBasis
-	                }) }, totalValue === null ? '...' : util_1.numberWithCommas((totalValue - totalBasis).toFixed(2))),
+	                }) }, totalValue === null ? '...' : util_1.format((totalValue - totalBasis).toFixed(2))),
 	            React.createElement("div", { className: "pf-row-actions" },
 	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
 	        return (React.createElement("div", { className: "pf-item", key: symbol, onClick: this._onClick },
@@ -7820,17 +7846,17 @@
 	                React.createElement("div", { style: { marginTop: '8px' } }, this.props.transactions.map(function (row, index) {
 	                    return (React.createElement("div", { className: "pf-row", key: index },
 	                        React.createElement("div", { className: "pf-row-symbol", style: { visibility: 'hidden' } }, symbol),
-	                        React.createElement("div", { className: "pf-row-price", style: { visibility: 'hidden' } }, curPrice !== null ? util_1.numberWithCommas(curPrice.toFixed(2)) : '...'),
-	                        React.createElement("div", { className: "pf-row-quantity" }, util_1.numberWithCommas(row.quantity)),
-	                        React.createElement("div", { className: "pf-row-basis" }, util_1.numberWithCommas(row.basis.toFixed(2))),
-	                        React.createElement("div", { className: "pf-row-current-value" }, curPrice ? util_1.numberWithCommas((curPrice * row.quantity).toFixed(2)) : '...'),
+	                        React.createElement("div", { className: "pf-row-price", style: { visibility: 'hidden' } }, curPrice !== null ? util_1.format(curPrice.toFixed(2)) : '...'),
+	                        React.createElement("div", { className: "pf-row-quantity" }, util_1.format(row.quantity)),
+	                        React.createElement("div", { className: "pf-row-basis" }, util_1.format(row.basis.toFixed(2))),
+	                        React.createElement("div", { className: "pf-row-current-value" }, curPrice ? util_1.format((curPrice * row.quantity).toFixed(2)) : '...'),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-row-gain': true,
 	                                'pf-color-red': curPrice !== null && curPrice < row.basis,
 	                                'pf-color-green': curPrice !== null && curPrice > row.basis
 	                            }) },
 	                            " ",
-	                            curPrice ? util_1.numberWithCommas(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'),
+	                            curPrice ? util_1.format(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'),
 	                        React.createElement("div", { className: "pf-row-actions" },
 	                            React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteClick(event, symbol, index); } }, "delete"))));
 	                }))
@@ -7842,52 +7868,82 @@
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 48 */,
-/* 49 */
+/* 49 */,
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    return new (P || (P = Promise))(function (resolve, reject) {
-	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-	        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments || [])).next());
-	    });
-	};
-	var __generator = (this && this.__generator) || function (thisArg, body) {
-	    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-	    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-	    function verb(n) { return function (v) { return step([n, v]); }; }
-	    function step(op) {
-	        if (f) throw new TypeError("Generator is already executing.");
-	        while (_) try {
-	            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-	            if (y = 0, t) op = [0, t.value];
-	            switch (op[0]) {
-	                case 0: case 1: t = op; break;
-	                case 4: _.label++; return { value: op[1], done: false };
-	                case 5: _.label++; y = op[1]; op = [0]; continue;
-	                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-	                default:
-	                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-	                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-	                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-	                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-	                    if (t[2]) _.ops.pop();
-	                    _.trys.pop(); continue;
-	            }
-	            op = body.call(thisArg, _);
-	        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-	        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	var types_1 = __webpack_require__(33);
+	__webpack_require__(48);
+	var classNames = __webpack_require__(38);
+	var util_1 = __webpack_require__(39);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var PFStockPriceTag = /** @class */ (function (_super) {
+	    __extends(PFStockPriceTag, _super);
+	    function PFStockPriceTag() {
+	        var _this = _super !== null && _super.apply(this, arguments) || this;
+	        _this._onClick = function (event) {
+	            event.stopPropagation();
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_PRICE_DISPLAY_MODE_CHANGE,
+	            });
+	        };
+	        return _this;
 	    }
-	};
+	    PFStockPriceTag.prototype.render = function () {
+	        var curPrice = this.props.price;
+	        var lastClose = this.props.previousClose;
+	        var priceNeutral = curPrice === null
+	            || Math.abs(curPrice - lastClose) < 1e-6;
+	        var priceIncreased = !priceNeutral && curPrice > lastClose;
+	        var priceDecreased = !priceNeutral && curPrice < lastClose;
+	        var priceDisplay = '...';
+	        if (curPrice !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.PER_SHARE_PRICE) {
+	            priceDisplay = util_1.format(curPrice.toFixed(2));
+	        }
+	        else if (curPrice !== null && lastClose !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.PERCENT_CHANGE) {
+	            var percentChange = curPrice && lastClose &&
+	                ((curPrice - lastClose) * 100 / lastClose).toFixed(2) || null;
+	            if (percentChange && percentChange[0] !== '-') {
+	                percentChange = '+' + percentChange;
+	            }
+	            priceDisplay = percentChange + '%';
+	        }
+	        return (React.createElement("div", { onClick: this._onClick, className: classNames({
+	                'pf-price': true,
+	                'pf-price-green': priceIncreased || priceNeutral,
+	                'pf-price-red': priceDecreased
+	            }) }, priceDisplay));
+	    };
+	    return PFStockPriceTag;
+	}(React.Component));
+	exports.PFStockPriceTag = PFStockPriceTag;
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
 	var PFDispatcher_1 = __webpack_require__(29);
@@ -7899,46 +7955,47 @@
 	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
 	            data: data,
 	        });
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 5000);
+	        setTimeout(function () { return recursivelyFetchStockData(); }, 3000);
 	    }, function (error) {
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 5000);
+	        console.log('API Call failed for symbols: ', allSymbols);
+	        setTimeout(function () { return recursivelyFetchStockData(); }, 3000);
 	    });
 	}
 	exports.recursivelyFetchStockData = recursivelyFetchStockData;
 	function getStockData(symbols) {
-	    return __awaiter(this, void 0, void 0, function () {
-	        var dataPoints, result;
-	        return __generator(this, function (_a) {
-	            switch (_a.label) {
-	                case 0: return [4 /*yield*/, Promise.all(symbols.map(function (symbol) {
-	                        return new Promise(function (resolve, reject) {
-	                            httpGetAsync('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + symbol + '&interval=1min&apikey=F1BJHA9S1TJZNY08', function (response) {
-	                                var res = JSON.parse(response);
-	                                var time = res['Meta Data']['3. Last Refreshed'];
-	                                var points = res['Time Series (Daily)'];
-	                                var daystamps = Object.keys(points);
-	                                var realtime = parseFloat(points[daystamps[0]]['4. close']);
-	                                var lastDayClose = parseFloat(points[daystamps[1]]['4. close']);
-	                                resolve({ realtime: realtime, lastDayClose: lastDayClose });
-	                            });
-	                        });
-	                    }))];
-	                case 1:
-	                    dataPoints = _a.sent();
-	                    result = {};
-	                    symbols.forEach(function (symbol, index) {
-	                        result[symbol] = dataPoints[index];
-	                    });
-	                    return [2 /*return*/, result];
-	            }
+	    if (symbols.length === 0) {
+	        return Promise.resolve({});
+	    }
+	    return new Promise(function (resolve, reject) {
+	        var url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
+	        httpGetAsync(url, function (response) {
+	            var responseJson = JSON.parse(response);
+	            var result = {};
+	            symbols.forEach(function (symbol) {
+	                var quote = responseJson[symbol].quote;
+	                var latestPrice = quote.latestPrice;
+	                var previousClose = quote.previousClose;
+	                var companyName = quote.companyName;
+	                result[symbol] = { latestPrice: latestPrice, previousClose: previousClose, companyName: companyName };
+	            });
+	            resolve(result);
+	        }, function () {
+	            reject();
 	        });
 	    });
 	}
-	function httpGetAsync(theUrl, callback) {
+	function httpGetAsync(theUrl, successCallback, errorCallback) {
+	    if (errorCallback === void 0) { errorCallback = null; }
 	    var xmlHttp = new XMLHttpRequest();
 	    xmlHttp.onreadystatechange = function () {
-	        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-	            callback(xmlHttp.responseText);
+	        if (xmlHttp.readyState == 4) {
+	            if (xmlHttp.status == 200) {
+	                successCallback(xmlHttp.responseText);
+	            }
+	            else {
+	                errorCallback && errorCallback();
+	            }
+	        }
 	    };
 	    xmlHttp.open('GET', theUrl, true); // true for asynchronous
 	    xmlHttp.send(null);

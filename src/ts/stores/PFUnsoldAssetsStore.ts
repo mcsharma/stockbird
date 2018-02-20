@@ -4,17 +4,19 @@ import {PFTradeDraftItem, PFTradeItem} from '../types/pf-trade-items';
 import {PFAction} from '../types/PFAction';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
-import {PFSymbol} from '../types/types';
+import {PFSymbol, PriceDisplayMode} from '../types/types';
 import {setCookie} from '../storage/cookies';
 
 const DEFAULT_STATE = {
   assets: OrderedMap<string, PFTradeItem>(),
   draftItem: null,
+  priceDisplayMode: PriceDisplayMode.PERCENT_CHANGE,
 };
 
 class State extends Record(DEFAULT_STATE) {
   assets: OrderedMap<PFSymbol, PFTradeItem>;
   draftItem?: PFTradeDraftItem | null;
+  priceDisplayMode: PriceDisplayMode;
 }
 
 class PFAssetsStore extends ReduceStore<State, PFAction> {
@@ -83,6 +85,9 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
         assets = assets.delete(action.symbol);
         state = state.set('assets', assets) as State;
         setCookie('assets', JSON.stringify(state.assets));
+        return state;
+      case PFActionTypes.UNSOLD_PRICE_DISPLAY_MODE_CHANGE:
+        state = state.set('priceDisplayMode', (state.priceDisplayMode + 1) % 2) as State;
         return state;
       default:
         return state;

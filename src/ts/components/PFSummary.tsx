@@ -4,7 +4,7 @@ import {List, OrderedMap} from 'immutable';
 import {PFSymbol, PFSymbolToStockDataPoint} from '../types/types';
 import {PFTradeItem} from '../types/pf-trade-items';
 import classNames = require('classnames');
-import {numberWithCommas} from '../util';
+import {format} from '../util';
 
 type Props = {
   assets: OrderedMap<PFSymbol, List<PFTradeItem>>,
@@ -28,7 +28,7 @@ export class PFSummary extends React.Component<Props> {
           isFetching = true;
           return;
         }
-        totalValue += row.quantity * symbolData.realtime;
+        totalValue += row.quantity * symbolData.latestPrice;
       })
     });
 
@@ -54,16 +54,16 @@ export class PFSummary extends React.Component<Props> {
         <div className="pf-summary-item-label">Gain/Loss</div>
         <div
           className={classNames({'pf-color-red': hasLoss, 'pf-color-green': hasProfit})}>
-          {isFetching ? '...' : numberWithCommas(profitText)} {profitPercent === null ? '' : '(' + profitPercent + '%)'}
+          {isFetching ? '...' : format(profitText)} {profitPercent === null ? '' : '(' + profitPercent + '%)'}
         </div>
       </div>
       <div>
         <div className="pf-summary-item-label">Total Value</div>
-        <div> {isFetching ? '...' : numberWithCommas(totalValue.toFixed(2))}</div>
+        <div> {isFetching ? '...' : format(totalValue.toFixed(2))}</div>
       </div>
       <div>
         <div className="pf-summary-item-label">Cost Basis</div>
-        <div> {numberWithCommas(totalBasis.toFixed(2))}</div>
+        <div> {format(totalBasis.toFixed(2))}</div>
       </div>
     </div>;
   }

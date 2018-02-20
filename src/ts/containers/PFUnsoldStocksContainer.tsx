@@ -4,12 +4,13 @@ import PFUnsoldAssetsStore from '../stores/PFUnsoldAssetsStore';
 import {PFUnsoldStocks} from '../components/PFUnsoldStocks';
 import {PFTradeDraftItem, PFTradeItem} from '../types/pf-trade-items';
 import MarketDataStore from '../stores/PFMarketDataStore';
-import {PFSymbolToStockDataPoint} from '../types/types';
+import {PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
 
 type State = {
   assets: PFTradeItem[][],
   draftItem?: PFTradeDraftItem,
   marketData: PFSymbolToStockDataPoint,
+  priceDisplayMode: PriceDisplayMode,
 };
 
 class PFUnsoldStocksContainer extends React.PureComponent<{}, State> {
@@ -25,6 +26,7 @@ class PFUnsoldStocksContainer extends React.PureComponent<{}, State> {
       assets: state.get('assets').toArray().map(item => item.toArray()),
       draftItem: state.get('draftItem'),
       marketData: marketState.marketData,
+      priceDisplayMode: state.priceDisplayMode,
     }
   }
 

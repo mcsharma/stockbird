@@ -3,13 +3,14 @@ import '../../css/pf-unsold-card.less';
 import {PFTradeDraftItem, PFTradeItem} from '../types/pf-trade-items';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
-import {PFSymbolToStockDataPoint} from '../types/types';
+import {PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
 import {PFAggregatedAssetRow} from './PFAggregatedAssetRow';
 
 type Props = {
   assets: PFTradeItem[][];
   draftItem?: PFTradeDraftItem;
   marketData: PFSymbolToStockDataPoint;
+  priceDisplayMode: PriceDisplayMode,
 };
 
 export class PFUnsoldStocks extends React.Component<Props> {
@@ -95,7 +96,12 @@ export class PFUnsoldStocks extends React.Component<Props> {
           return null;
         }
         return (
-          <PFAggregatedAssetRow key={assetRows[0].symbol} transactions={assetRows} marketData={this.props.marketData}/>
+          <PFAggregatedAssetRow
+            key={assetRows[0].symbol}
+            transactions={assetRows}
+            marketData={this.props.marketData}
+            priceDisplayMode={this.props.priceDisplayMode}
+          />
         );
       })}</div>;
 
@@ -112,7 +118,7 @@ export class PFUnsoldStocks extends React.Component<Props> {
         <button onClick={this._onDeleteDraft}>Delete</button>
       </div>);
     } else {
-      addButton = <button onClick={this._onAddClick}>Add Entry</button>;
+      addButton = <button style={{marginTop: '16px'}} onClick={this._onAddClick}>Add Entry</button>;
     }
 
     return (<div className="pf-unsold-card">

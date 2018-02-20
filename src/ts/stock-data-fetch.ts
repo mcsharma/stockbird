@@ -2,10 +2,12 @@ import PFUnsoldAssetsStore from './stores/PFUnsoldAssetsStore';
 import {PFDispatcher} from './dispatcher/PFDispatcher';
 import PFActionTypes from './types/PFActionTypes';
 import {PFSymbolToStockDataPoint} from './types/types';
+import {Simulate} from 'react-dom/test-utils';
 
 export type StockDataPoint = {
-  realtime: number,
-  lastDayClose: number,
+  latestPrice: number,
+  previousClose: number,
+  companyName: string,
 };
 
 export function recursivelyFetchStockData() {
@@ -15,41 +17,49 @@ export function recursivelyFetchStockData() {
       type: PFActionTypes.MARKET_DATA_UPDATE,
       data,
     });
-    setTimeout(() => recursivelyFetchStockData(), 5000);
+    setTimeout(() => recursivelyFetchStockData(), 3000);
   }, (error) => {
-    setTimeout(() => recursivelyFetchStockData(), 5000);
+    console.log('API Call failed for symbols: ', allSymbols);
+    setTimeout(() => recursivelyFetchStockData(), 3000);
   });
 }
 
 
-async function getStockData(symbols: string[]): Promise<PFSymbolToStockDataPoint> {
-  const dataPoints = await Promise.all(symbols.map((symbol) => {
-    return new Promise<StockDataPoint>((resolve, reject) => {
-      httpGetAsync('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + symbol + '&interval=1min&apikey=F1BJHA9S1TJZNY08', (response) => {
-        const res = JSON.parse(response);
-        const time = res['Meta Data']['3. Last Refreshed'];
-        const points = res['Time Series (Daily)'];
-        const daystamps = Object.keys(points);
-        const realtime = parseFloat(points[daystamps[0]]['4. close']);
-        const lastDayClose = parseFloat(points[daystamps[1]]['4. close']);
-        resolve({realtime, lastDayClose});
-      });
+function getStockData(symbols: string[]): Promise<PFSymbolToStockDataPoint> {
+  if (symbols.length === 0) {
+    return Promise.resolve({});
+  }
+  return new Promise<PFSymbolToStockDataPoint>((resolve, reject) => {
+    const url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
+    httpGetAsync(url, (response) => {
+      const responseJson = JSON.parse(response);
+      const result = {};
+      symbols.forEach((symbol) => {
+          const quote = responseJson[symbol].quote;
+          const latestPrice = quote.latestPrice as number;
+          const previousClose = quote.previousClose as number;
+          const companyName = quote.companyName as string;
+          result[symbol] = {latestPrice, previousClose, companyName};
+        }
+      );
+      resolve(result);
+    }, () => {
+      reject();
     });
-  }));
-
-  const result = {};
-  symbols.forEach((symbol, index) => {
-    result[symbol] = dataPoints[index];
   });
-  return result;
 }
 
 
-function httpGetAsync(theUrl, callback) {
+function httpGetAsync(theUrl, successCallback, errorCallback = null) {
   const xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function () {
-    if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-      callback(xmlHttp.responseText);
+    if (xmlHttp.readyState == 4) {
+      if (xmlHttp.status == 200) {
+        successCallback(xmlHttp.responseText);
+      } else {
+        errorCallback && errorCallback();
+      }
+    }
   };
   xmlHttp.open('GET', theUrl, true); // true for asynchronous
   xmlHttp.send(null);

@@ -1,16 +1,18 @@
 import React = require('react');
 import {PFTradeItem} from '../types/pf-trade-items';
-import {PFSymbolToStockDataPoint} from '../types/types';
+import {PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
 import '../../css/pf-aggregated-row.less';
 
 import classNames = require('classnames');
-import {numberWithCommas} from '../util';
+import {format} from '../util';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
+import {PFStockPriceTag} from './PFStockPriceTag';
 
 type Props = {
   transactions: PFTradeItem[],
   marketData: PFSymbolToStockDataPoint,
+  priceDisplayMode: PriceDisplayMode,
 };
 
 type State = {
@@ -47,9 +49,11 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
   render() {
     const expanded = this.state.expanded;
     const symbol = this.props.transactions[0].symbol;
-    const curPrice = this.props.marketData[symbol] ? this.props.marketData[symbol].realtime : null;
-    const priceIncreased = curPrice !== null && curPrice > this.props.marketData[symbol].lastDayClose;
-
+    const symbolData = this.props.marketData[symbol];
+    const curPrice = symbolData && symbolData.latestPrice
+      || null;
+    const lastClose = symbolData && symbolData.previousClose
+      || null;
     let totalQuantity = 0, totalBasis = 0;
     this.props.transactions.forEach((transaction) => {
       totalQuantity += transaction.quantity;
@@ -61,16 +65,17 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
     const totalValue = curPrice === null ? null : (curPrice * totalQuantity);
 
     const summaryRow = (<div className="pf-row">
-      <div className="pf-row-symbol">{symbol}</div>
-      <div className='pf-row-price'>
-        <div
-          className={classNames({'pf-price': true, 'pf-price-green': priceIncreased, 'pf-price-red': !priceIncreased})}>
-          {curPrice !== null ? numberWithCommas(curPrice.toFixed(2)) : '...'}</div>
+      <div className="pf-row-symbol">
+        <div>{symbol}</div>
+        <div className="pf-company-name">{symbolData && symbolData.companyName}</div>
       </div>
-      <div className="pf-row-quantity">{numberWithCommas(totalQuantity)}</div>
-      <div className="pf-row-basis">{numberWithCommas(avgPrice.toFixed(2))}</div>
+      <div className='pf-row-price'>
+        <PFStockPriceTag price={curPrice} previousClose={lastClose} priceDisplayMode={this.props.priceDisplayMode}/>
+      </div>
+      <div className="pf-row-quantity">{format(totalQuantity)}</div>
+      <div className="pf-row-basis">{format(avgPrice.toFixed(2))}</div>
       <div
-        className="pf-row-current-value">{totalValue === null ? '...' : numberWithCommas(totalValue.toFixed(2))}</div>
+        className="pf-row-current-value">{totalValue === null ? '...' : format(totalValue.toFixed(2))}</div>
       <div
         className={classNames({
             'pf-row-gain': true,
@@ -78,7 +83,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
             'pf-color-green': totalValue > totalBasis
           }
         )}>
-        {totalValue === null ? '...' : numberWithCommas((totalValue - totalBasis).toFixed(2))}</div>
+        {totalValue === null ? '...' : format((totalValue - totalBasis).toFixed(2))}</div>
       <div className="pf-row-actions">
         <a href="#" onClick={(event) => this._onRowDeleteAllClick(event, symbol)}>delete</a>
       </div>
@@ -93,18 +98,18 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
               return (<div className="pf-row" key={index}>
                 <div className="pf-row-symbol" style={{visibility: 'hidden'}}>{symbol}</div>
                 <div className="pf-row-price" style={{visibility: 'hidden'}}>
-                  {curPrice !== null ? numberWithCommas(curPrice.toFixed(2)) : '...'}</div>
-                <div className="pf-row-quantity">{numberWithCommas(row.quantity)}</div>
-                <div className="pf-row-basis">{numberWithCommas(row.basis.toFixed(2))}</div>
+                  {curPrice !== null ? format(curPrice.toFixed(2)) : '...'}</div>
+                <div className="pf-row-quantity">{format(row.quantity)}</div>
+                <div className="pf-row-basis">{format(row.basis.toFixed(2))}</div>
                 <div
-                  className="pf-row-current-value">{curPrice ? numberWithCommas((curPrice * row.quantity).toFixed(2)) : '...'}</div>
+                  className="pf-row-current-value">{curPrice ? format((curPrice * row.quantity).toFixed(2)) : '...'}</div>
                 <div
                   className={classNames({
                     'pf-row-gain': true,
                     'pf-color-red': curPrice !== null && curPrice < row.basis,
                     'pf-color-green': curPrice !== null && curPrice > row.basis
                   })}
-                > {curPrice ? numberWithCommas(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'}</div>
+                > {curPrice ? format(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'}</div>
                 <div className="pf-row-actions">
                   <a href="#" onClick={(event) => this._onRowDeleteClick(event, symbol, index)}>delete</a>
                 </div>
