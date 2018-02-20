@@ -1,0 +1,72 @@
+.pf-row-symbol, .pf-header-symbol {
+  text-align: left;
+  padding-left: 4px;
+  width: 100px;
+}
+
+.pf-row-price, .pf-header-price {
+  width: 120px;
+}
+
+.pf-row-quantity, .pf-header-quantity {
+  width: 100px;
+}
+
+.pf-row-current-value, .pf-header-current-value {
+  width: 140px;
+}
+
+.pf-row-basis, .pf-header-basis {
+  width: 140px;
+}
+
+.pf-row-gain, .pf-header-gain {
+  width: 160px;
+  text-align: right;
+  padding-right: 4px;
+
+}
+
+.pf-item {
+  cursor: pointer;
+  padding: 8px 0;
+  border-top: 1px solid #dfdfdf;
+  &:hover {
+    background-color: #f6f6f6;
+  }
+}
+
+.pf-row {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  &:not(:first-child) {
+    margin-top: 4px;
+  }
+}
+
+.pf-row-price {
+  display: flex;
+  justify-content: center;
+}
+.pf-price {
+  font-size: 14px;
+  border-radius: 2px;
+  color: white;
+  width: 60px;
+  padding: 4px 4px;
+  &.pf-price-green {
+    background-color: #00b500;
+  }
+  &.pf-price-red {
+    background-color: #ff2d2d;
+  }
+}
+
+.pf-color-red {
+  color: #ff2d2d;
+}
+
+.pf-color-green {
+  color: #00b500;
+}

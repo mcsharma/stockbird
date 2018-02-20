@@ -1,0 +1,134 @@
+html,
+body {
+  height: 100%;
+  color: #4b4f56;
+}
+body {
+  margin: 0;
+  background-color: #e9eef5;
+  font-family: sans-serif;
+}
+.pf-summary {
+  border: 1px solid #e0e0e0;
+  box-shadow: #d4d4d4 10px 0 50px 0;
+  background-color: white;
+  border-radius: 2px;
+  height: 60px;
+  padding: 20px;
+  display: flex;
+  font-size: 18px;
+  justify-content: space-between;
+}
+.pf-summary .pf-summary-item-label {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.pf-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pf-root .pf-chrome {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 40px;
+  width: 100%;
+  background-color: #7e42f1;
+}
+.pf-root .pf-body {
+  width: 800px;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+.pf-root .pf-body .pf-main-item-label {
+  margin-bottom: 4px;
+}
+.pf-unsold-card {
+  border: 1px solid #dddfe2;
+  background-color: white;
+  border-radius: 4px;
+  min-height: 160px;
+  padding: 20px;
+  box-shadow: #d4d4d4 10px 0 50px 0;
+}
+.pf-unsold-card .pf-table-header {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  margin-bottom: 8px;
+}
+.pf-unsold-card .pf-table {
+  display: flex;
+  flex-direction: column;
+}
+.pf-row-symbol,
+.pf-header-symbol {
+  text-align: left;
+  padding-left: 4px;
+  width: 100px;
+}
+.pf-row-price,
+.pf-header-price {
+  width: 120px;
+}
+.pf-row-quantity,
+.pf-header-quantity {
+  width: 100px;
+}
+.pf-row-current-value,
+.pf-header-current-value {
+  width: 140px;
+}
+.pf-row-basis,
+.pf-header-basis {
+  width: 140px;
+}
+.pf-row-gain,
+.pf-header-gain {
+  width: 160px;
+  text-align: right;
+  padding-right: 4px;
+}
+.pf-item {
+  cursor: pointer;
+  padding: 8px 0;
+  border-top: 1px solid #dfdfdf;
+}
+.pf-item:hover {
+  background-color: #f6f6f6;
+}
+.pf-row {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+}
+.pf-row:not(:first-child) {
+  margin-top: 4px;
+}
+.pf-row-price {
+  display: flex;
+  justify-content: center;
+}
+.pf-price {
+  font-size: 14px;
+  border-radius: 2px;
+  color: white;
+  width: 60px;
+  padding: 4px 4px;
+}
+.pf-price.pf-price-green {
+  background-color: #00b500;
+}
+.pf-price.pf-price-red {
+  background-color: #ff2d2d;
+}
+.pf-color-red {
+  color: #ff2d2d;
+}
+.pf-color-green {
+  color: #00b500;
+}
+
+/*# sourceMappingURL=bundle.css.map*/
