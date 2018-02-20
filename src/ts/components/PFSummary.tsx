@@ -34,7 +34,9 @@ export class PFSummary extends React.Component<Props> {
 
     let profitText = '';
     const profit = isFetching ? null : totalValue - totalBasis;
-    let hasProfit = isFetching ? null : totalValue > totalBasis;
+    let isNeutral = isFetching || Math.abs(totalBasis - totalValue) < 1e-6;
+    let hasProfit = !isNeutral && totalValue > totalBasis;
+    let hasLoss = !isNeutral && totalValue < totalBasis;
     if (profit !== null) {
       profitText = profit.toFixed(2);
       if (hasProfit) {
@@ -43,7 +45,7 @@ export class PFSummary extends React.Component<Props> {
     }
 
     let profitPercent = null;
-    if (profit !== null) {
+    if (profit !== null && totalBasis > 0) {
       profitPercent = (profit / totalBasis * 100).toFixed(2);
     }
 
@@ -51,7 +53,7 @@ export class PFSummary extends React.Component<Props> {
       <div>
         <div className="pf-summary-item-label">Gain/Loss</div>
         <div
-          className={classNames({'pf-color-red': !hasProfit, 'pf-color-green': hasProfit})}>
+          className={classNames({'pf-color-red': hasLoss, 'pf-color-green': hasProfit})}>
           {isFetching ? '...' : numberWithCommas(profitText)} {profitPercent === null ? '' : '(' + profitPercent + '%)'}
         </div>
       </div>
