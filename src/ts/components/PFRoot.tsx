@@ -3,7 +3,7 @@ import PFSummaryContainer from '../containers/PFSummaryContainer';
 
 import '../../css/pf-root.less';
 import PFUnsoldStocksContainer from '../containers/PFUnsoldStocksContainer';
-import {recursivelyFetchStockData} from '../stock-data-fetch';
+import {recursivelyFetchAndUpdateStockData} from '../stock-data-fetch';
 
 type Props = {};
 
@@ -14,7 +14,7 @@ export class PFRoot extends React.Component<Props> {
   }
 
   componentDidMount() {
-    recursivelyFetchStockData();
+    recursivelyFetchAndUpdateStockData();
   }
 
   render() {

@@ -10,22 +10,25 @@ export type StockDataPoint = {
   companyName: string,
 };
 
-export function recursivelyFetchStockData() {
+export function fetchAndUpdateStockData() {
   const allSymbols = PFUnsoldAssetsStore.getState().get('assets').keySeq().toArray();
-  getStockData(allSymbols).then(data => {
+  return fetchStockData(allSymbols).then(data => {
     PFDispatcher.dispatch({
       type: PFActionTypes.MARKET_DATA_UPDATE,
       data,
     });
-    setTimeout(() => recursivelyFetchStockData(), 3000);
-  }, (error) => {
-    console.log('API Call failed for symbols: ', allSymbols);
-    setTimeout(() => recursivelyFetchStockData(), 3000);
   });
 }
 
+export function recursivelyFetchAndUpdateStockData() {
+  fetchAndUpdateStockData().then(() => {
+    setTimeout(() => recursivelyFetchAndUpdateStockData(), 5000);
+  }, () => {
+    setTimeout(() => recursivelyFetchAndUpdateStockData(), 5000);
+  });
+}
 
-function getStockData(symbols: string[]): Promise<PFSymbolToStockDataPoint> {
+function fetchStockData(symbols: string[]): Promise<PFSymbolToStockDataPoint> {
   if (symbols.length === 0) {
     return Promise.resolve({});
   }

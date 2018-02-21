@@ -108,16 +108,16 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	var PFSummaryContainer_1 = __webpack_require__(8);
-	__webpack_require__(41);
-	var PFUnsoldStocksContainer_1 = __webpack_require__(43);
-	var stock_data_fetch_1 = __webpack_require__(51);
+	__webpack_require__(42);
+	var PFUnsoldStocksContainer_1 = __webpack_require__(44);
+	var stock_data_fetch_1 = __webpack_require__(35);
 	var PFRoot = /** @class */ (function (_super) {
 	    __extends(PFRoot, _super);
 	    function PFRoot(props) {
 	        return _super.call(this, props) || this;
 	    }
 	    PFRoot.prototype.componentDidMount = function () {
-	        stock_data_fetch_1.recursivelyFetchStockData();
+	        stock_data_fetch_1.recursivelyFetchAndUpdateStockData();
 	    };
 	    PFRoot.prototype.render = function () {
 	        return (React.createElement("div", { className: "pf-root" },
@@ -162,8 +162,8 @@
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFSummary_1 = __webpack_require__(35);
-	var PFMarketDataStore_1 = __webpack_require__(40);
+	var PFSummary_1 = __webpack_require__(36);
+	var PFMarketDataStore_1 = __webpack_require__(41);
 	var PFSummaryContainer = /** @class */ (function (_super) {
 	    __extends(PFSummaryContainer, _super);
 	    function PFSummaryContainer() {
@@ -1903,6 +1903,7 @@
 	var PFActionTypes_1 = __webpack_require__(32);
 	var types_1 = __webpack_require__(33);
 	var cookies_1 = __webpack_require__(34);
+	var stock_data_fetch_1 = __webpack_require__(35);
 	var DEFAULT_STATE = {
 	    assets: immutable_1.OrderedMap(),
 	    draftItem: null,
@@ -1966,6 +1967,7 @@
 	                }
 	                state = state.set('assets', assets);
 	                state = state.set('draftItem', null);
+	                var _ = stock_data_fetch_1.fetchAndUpdateStockData();
 	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
 	                return state;
 	            case PFActionTypes_1.default.UNSOLD_DELETE_ROW:
@@ -7368,6 +7370,73 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	function fetchAndUpdateStockData() {
+	    var allSymbols = PFUnsoldAssetsStore_1.default.getState().get('assets').keySeq().toArray();
+	    return fetchStockData(allSymbols).then(function (data) {
+	        PFDispatcher_1.PFDispatcher.dispatch({
+	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
+	            data: data,
+	        });
+	    });
+	}
+	exports.fetchAndUpdateStockData = fetchAndUpdateStockData;
+	function recursivelyFetchAndUpdateStockData() {
+	    fetchAndUpdateStockData().then(function () {
+	        setTimeout(function () { return recursivelyFetchAndUpdateStockData(); }, 5000);
+	    }, function () {
+	        setTimeout(function () { return recursivelyFetchAndUpdateStockData(); }, 5000);
+	    });
+	}
+	exports.recursivelyFetchAndUpdateStockData = recursivelyFetchAndUpdateStockData;
+	function fetchStockData(symbols) {
+	    if (symbols.length === 0) {
+	        return Promise.resolve({});
+	    }
+	    return new Promise(function (resolve, reject) {
+	        var url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
+	        httpGetAsync(url, function (response) {
+	            var responseJson = JSON.parse(response);
+	            var result = {};
+	            symbols.forEach(function (symbol) {
+	                var quote = responseJson[symbol].quote;
+	                var latestPrice = quote.latestPrice;
+	                var previousClose = quote.previousClose;
+	                var companyName = quote.companyName;
+	                result[symbol] = { latestPrice: latestPrice, previousClose: previousClose, companyName: companyName };
+	            });
+	            resolve(result);
+	        }, function () {
+	            reject();
+	        });
+	    });
+	}
+	function httpGetAsync(theUrl, successCallback, errorCallback) {
+	    if (errorCallback === void 0) { errorCallback = null; }
+	    var xmlHttp = new XMLHttpRequest();
+	    xmlHttp.onreadystatechange = function () {
+	        if (xmlHttp.readyState == 4) {
+	            if (xmlHttp.status == 200) {
+	                successCallback(xmlHttp.responseText);
+	            }
+	            else {
+	                errorCallback && errorCallback();
+	            }
+	        }
+	    };
+	    xmlHttp.open('GET', theUrl, true); // true for asynchronous
+	    xmlHttp.send(null);
+	}
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
 	var __extends = (this && this.__extends) || (function () {
 	    var extendStatics = Object.setPrototypeOf ||
 	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -7380,9 +7449,9 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(36);
-	var classNames = __webpack_require__(38);
-	var util_1 = __webpack_require__(39);
+	__webpack_require__(37);
+	var classNames = __webpack_require__(39);
+	var util_1 = __webpack_require__(40);
 	var PFSummary = /** @class */ (function (_super) {
 	    __extends(PFSummary, _super);
 	    function PFSummary() {
@@ -7446,14 +7515,14 @@
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 37 */,
-/* 38 */
+/* 38 */,
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -7507,7 +7576,7 @@
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -7519,7 +7588,7 @@
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7569,14 +7638,14 @@
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 42 */,
-/* 43 */
+/* 43 */,
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7602,8 +7671,8 @@
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFUnsoldStocks_1 = __webpack_require__(44);
-	var PFMarketDataStore_1 = __webpack_require__(40);
+	var PFUnsoldStocks_1 = __webpack_require__(45);
+	var PFMarketDataStore_1 = __webpack_require__(41);
 	var PFUnsoldStocksContainer = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocksContainer, _super);
 	    function PFUnsoldStocksContainer() {
@@ -7631,7 +7700,7 @@
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7647,10 +7716,10 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(45);
+	__webpack_require__(46);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFAggregatedAssetRow_1 = __webpack_require__(47);
+	var PFAggregatedAssetRow_1 = __webpack_require__(48);
 	var PFUnsoldStocks = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocks, _super);
 	    function PFUnsoldStocks() {
@@ -7752,14 +7821,14 @@
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 46 */,
-/* 47 */
+/* 47 */,
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7775,12 +7844,12 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(48);
-	var classNames = __webpack_require__(38);
-	var util_1 = __webpack_require__(39);
+	__webpack_require__(49);
+	var classNames = __webpack_require__(39);
+	var util_1 = __webpack_require__(40);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFStockPriceTag_1 = __webpack_require__(50);
+	var PFStockPriceTag_1 = __webpack_require__(51);
 	var PFAggregatedAssetRow = /** @class */ (function (_super) {
 	    __extends(PFAggregatedAssetRow, _super);
 	    function PFAggregatedAssetRow() {
@@ -7868,14 +7937,14 @@
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 49 */,
-/* 50 */
+/* 50 */,
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7892,9 +7961,9 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	var types_1 = __webpack_require__(33);
-	__webpack_require__(48);
-	var classNames = __webpack_require__(38);
-	var util_1 = __webpack_require__(39);
+	__webpack_require__(49);
+	var classNames = __webpack_require__(39);
+	var util_1 = __webpack_require__(40);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var PFStockPriceTag = /** @class */ (function (_super) {
@@ -7937,69 +8006,6 @@
 	    return PFStockPriceTag;
 	}(React.Component));
 	exports.PFStockPriceTag = PFStockPriceTag;
-
-
-/***/ }),
-/* 51 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-	Object.defineProperty(exports, "__esModule", { value: true });
-	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFDispatcher_1 = __webpack_require__(29);
-	var PFActionTypes_1 = __webpack_require__(32);
-	function recursivelyFetchStockData() {
-	    var allSymbols = PFUnsoldAssetsStore_1.default.getState().get('assets').keySeq().toArray();
-	    getStockData(allSymbols).then(function (data) {
-	        PFDispatcher_1.PFDispatcher.dispatch({
-	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
-	            data: data,
-	        });
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 3000);
-	    }, function (error) {
-	        console.log('API Call failed for symbols: ', allSymbols);
-	        setTimeout(function () { return recursivelyFetchStockData(); }, 3000);
-	    });
-	}
-	exports.recursivelyFetchStockData = recursivelyFetchStockData;
-	function getStockData(symbols) {
-	    if (symbols.length === 0) {
-	        return Promise.resolve({});
-	    }
-	    return new Promise(function (resolve, reject) {
-	        var url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
-	        httpGetAsync(url, function (response) {
-	            var responseJson = JSON.parse(response);
-	            var result = {};
-	            symbols.forEach(function (symbol) {
-	                var quote = responseJson[symbol].quote;
-	                var latestPrice = quote.latestPrice;
-	                var previousClose = quote.previousClose;
-	                var companyName = quote.companyName;
-	                result[symbol] = { latestPrice: latestPrice, previousClose: previousClose, companyName: companyName };
-	            });
-	            resolve(result);
-	        }, function () {
-	            reject();
-	        });
-	    });
-	}
-	function httpGetAsync(theUrl, successCallback, errorCallback) {
-	    if (errorCallback === void 0) { errorCallback = null; }
-	    var xmlHttp = new XMLHttpRequest();
-	    xmlHttp.onreadystatechange = function () {
-	        if (xmlHttp.readyState == 4) {
-	            if (xmlHttp.status == 200) {
-	                successCallback(xmlHttp.responseText);
-	            }
-	            else {
-	                errorCallback && errorCallback();
-	            }
-	        }
-	    };
-	    xmlHttp.open('GET', theUrl, true); // true for asynchronous
-	    xmlHttp.send(null);
-	}
 
 
 /***/ })

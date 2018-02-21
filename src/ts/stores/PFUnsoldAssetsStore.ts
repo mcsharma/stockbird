@@ -6,6 +6,7 @@ import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
 import {PFSymbol, PriceDisplayMode} from '../types/types';
 import {setCookie} from '../storage/cookies';
+import {fetchAndUpdateStockData} from '../stock-data-fetch';
 
 const DEFAULT_STATE = {
   assets: OrderedMap<string, PFTradeItem>(),
@@ -67,6 +68,7 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
         }
         state = state.set('assets', assets) as State;
         state = state.set('draftItem', null) as State;
+        const _ = fetchAndUpdateStockData();
         setCookie('assets', JSON.stringify(state.assets));
         return state;
       case PFActionTypes.UNSOLD_DELETE_ROW:
