@@ -7,6 +7,7 @@ import PFActionTypes from '../types/PFActionTypes';
 import {PFSymbol, PriceDisplayMode} from '../types/types';
 import {setCookie} from '../storage/cookies';
 import {fetchAndUpdateStockData} from '../stock-data-fetch';
+import PFMarketDataStore from './PFMarketDataStore';
 
 const DEFAULT_STATE = {
   assets: OrderedMap<string, PFTradeItem>(),
@@ -20,10 +21,126 @@ class State extends Record(DEFAULT_STATE) {
   priceDisplayMode: PriceDisplayMode;
 }
 
-class PFAssetsStore extends ReduceStore<State, PFAction> {
+class PFUnsoldAssetsStore extends ReduceStore<State, PFAction> {
 
   getInitialState() {
     return new State();
+  }
+
+  /**
+   * Gets the aggregated data for a given set of symbols, if symbols is an empty array, returns
+   * data for all the symbols.
+   * @param {Array<PFSymbol>} symbols
+   * @returns {{totalValue: number; totalBasis: number; dayChange: number}}
+   */
+  getTotalValueAndBasisAndDayChange(symbols: Array<PFSymbol> = []) {
+    let totalBasis = 0;
+    let totalValue = 0;
+    let dayChange = 0;
+    let isFetching = false;
+    const {marketData} = PFMarketDataStore.getState();
+    this.getState().assets.forEach((rows, symbol) => {
+      if (symbols.length > 0 && symbols.indexOf(symbol) === -1) {
+        // a symbols for which caller don't want data.
+        return;
+      }
+      rows.forEach((row) => {
+        totalBasis += row.quantity * row.basis;
+
+        if (isFetching) {
+          return;
+        }
+        const symbolData = marketData[row.symbol];
+        if (!symbolData) {
+          isFetching = true;
+          return;
+        }
+
+        totalValue += row.quantity * symbolData.latestPrice;
+        dayChange += row.quantity * (symbolData.latestPrice - symbolData.previousClose);
+      })
+    });
+
+    return {
+      dayChange: isFetching ? null : dayChange,
+      totalBasis: totalBasis,
+      totalValue: isFetching ? null : totalValue,
+    };
+  }
+
+  getTotalCostBasis(): number {
+    return this.getTotalValueAndBasisAndDayChange().totalBasis;
+  }
+
+  getTotalValue(): number | null {
+    return this.getTotalValueAndBasisAndDayChange().totalValue;
+  }
+
+  getDayChange(): number | null {
+    return this.getTotalValueAndBasisAndDayChange().dayChange;
+  }
+
+  getDayChangeForSymbol(symbol: PFSymbol): number | null {
+    return this.getTotalValueAndBasisAndDayChange([symbol]).dayChange;
+  }
+
+  getDayChangePercent(): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange();
+    if (data.dayChange === null || data.totalValue === null) {
+      return null;
+    }
+    const previousDayValue = data.totalValue - data.dayChange;
+    if (Math.abs(previousDayValue) < 1e-6) {
+      return null;
+    }
+    return (data.dayChange / previousDayValue) * 100;
+  }
+
+  getDayChangePercentForSymbol(symbol: PFSymbol): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange([symbol]);
+    if (data.dayChange === null) {
+      return null;
+    }
+    const previousDayValue = data.totalValue - data.dayChange;
+    return (data.dayChange / previousDayValue) * 100;
+  }
+
+  getOverallGain(): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange();
+    if (data.totalValue === null) {
+      return null;
+    }
+    return data.totalValue - data.totalBasis;
+  }
+
+  getOverallGainForSymbol(symbol: PFSymbol): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange([symbol]);
+    if (data.totalValue === null) {
+      return null;
+    }
+    return data.totalValue - data.totalBasis;
+  }
+
+  getOverallGainPercent(): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange();
+    if (data.totalValue === null) {
+      return null;
+    }
+    if (Math.abs(data.totalBasis) < 1e-6) {
+      return null;
+    }
+    return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
+  }
+
+  getOverallGainPercentForSymbol(symbol: PFSymbol): number | null {
+    const data = this.getTotalValueAndBasisAndDayChange([symbol]);
+    if (data.totalValue === null) {
+      return null;
+    }
+    if (Math.abs(data.totalBasis) < 1e-6) {
+      return null;
+    }
+    return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
   }
 
   reduce(state: State, action: PFAction): State {
@@ -97,4 +214,4 @@ class PFAssetsStore extends ReduceStore<State, PFAction> {
   }
 }
 
-export default new PFAssetsStore(PFDispatcher);
+export default new PFUnsoldAssetsStore(PFDispatcher);

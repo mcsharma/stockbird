@@ -162,8 +162,8 @@
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFSummary_1 = __webpack_require__(36);
-	var PFMarketDataStore_1 = __webpack_require__(41);
+	var PFSummary_1 = __webpack_require__(37);
+	var PFMarketDataStore_1 = __webpack_require__(36);
 	var PFSummaryContainer = /** @class */ (function (_super) {
 	    __extends(PFSummaryContainer, _super);
 	    function PFSummaryContainer() {
@@ -174,10 +174,17 @@
 	    };
 	    PFSummaryContainer.calculateState = function (prevState) {
 	        var assets = PFUnsoldAssetsStore_1.default.getState().get('assets');
-	        var marketData = PFMarketDataStore_1.default.getState().get('marketData');
+	        var marketDataState = PFMarketDataStore_1.default.getState();
+	        var _a = PFUnsoldAssetsStore_1.default.getTotalValueAndBasisAndDayChange(), dayChange = _a.dayChange, totalValue = _a.totalValue, totalBasis = _a.totalBasis;
 	        return {
 	            assets: assets,
-	            marketData: marketData,
+	            marketData: marketDataState.marketData,
+	            dayChange: dayChange,
+	            dayChangePercent: PFUnsoldAssetsStore_1.default.getDayChangePercent(),
+	            overallGain: PFUnsoldAssetsStore_1.default.getOverallGain(),
+	            overallGainPercent: PFUnsoldAssetsStore_1.default.getOverallGainPercent(),
+	            totalValue: totalValue,
+	            totalBasis: totalBasis,
 	        };
 	    };
 	    PFSummaryContainer.prototype.render = function () {
@@ -1904,6 +1911,7 @@
 	var types_1 = __webpack_require__(33);
 	var cookies_1 = __webpack_require__(34);
 	var stock_data_fetch_1 = __webpack_require__(35);
+	var PFMarketDataStore_1 = __webpack_require__(36);
 	var DEFAULT_STATE = {
 	    assets: immutable_1.OrderedMap(),
 	    draftItem: null,
@@ -1916,15 +1924,118 @@
 	    }
 	    return State;
 	}(immutable_1.Record(DEFAULT_STATE)));
-	var PFAssetsStore = /** @class */ (function (_super) {
-	    __extends(PFAssetsStore, _super);
-	    function PFAssetsStore() {
+	var PFUnsoldAssetsStore = /** @class */ (function (_super) {
+	    __extends(PFUnsoldAssetsStore, _super);
+	    function PFUnsoldAssetsStore() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
-	    PFAssetsStore.prototype.getInitialState = function () {
+	    PFUnsoldAssetsStore.prototype.getInitialState = function () {
 	        return new State();
 	    };
-	    PFAssetsStore.prototype.reduce = function (state, action) {
+	    /**
+	     * Gets the aggregated data for a given set of symbols, if symbols is an empty array, returns
+	     * data for all the symbols.
+	     * @param {Array<PFSymbol>} symbols
+	     * @returns {{totalValue: number; totalBasis: number; dayChange: number}}
+	     */
+	    PFUnsoldAssetsStore.prototype.getTotalValueAndBasisAndDayChange = function (symbols) {
+	        if (symbols === void 0) { symbols = []; }
+	        var totalBasis = 0;
+	        var totalValue = 0;
+	        var dayChange = 0;
+	        var isFetching = false;
+	        var marketData = PFMarketDataStore_1.default.getState().marketData;
+	        this.getState().assets.forEach(function (rows, symbol) {
+	            if (symbols.length > 0 && symbols.indexOf(symbol) === -1) {
+	                // a symbols for which caller don't want data.
+	                return;
+	            }
+	            rows.forEach(function (row) {
+	                totalBasis += row.quantity * row.basis;
+	                if (isFetching) {
+	                    return;
+	                }
+	                var symbolData = marketData[row.symbol];
+	                if (!symbolData) {
+	                    isFetching = true;
+	                    return;
+	                }
+	                totalValue += row.quantity * symbolData.latestPrice;
+	                dayChange += row.quantity * (symbolData.latestPrice - symbolData.previousClose);
+	            });
+	        });
+	        return {
+	            dayChange: isFetching ? null : dayChange,
+	            totalBasis: totalBasis,
+	            totalValue: isFetching ? null : totalValue,
+	        };
+	    };
+	    PFUnsoldAssetsStore.prototype.getTotalCostBasis = function () {
+	        return this.getTotalValueAndBasisAndDayChange().totalBasis;
+	    };
+	    PFUnsoldAssetsStore.prototype.getTotalValue = function () {
+	        return this.getTotalValueAndBasisAndDayChange().totalValue;
+	    };
+	    PFUnsoldAssetsStore.prototype.getDayChange = function () {
+	        return this.getTotalValueAndBasisAndDayChange().dayChange;
+	    };
+	    PFUnsoldAssetsStore.prototype.getDayChangeForSymbol = function (symbol) {
+	        return this.getTotalValueAndBasisAndDayChange([symbol]).dayChange;
+	    };
+	    PFUnsoldAssetsStore.prototype.getDayChangePercent = function () {
+	        var data = this.getTotalValueAndBasisAndDayChange();
+	        if (data.dayChange === null || data.totalValue === null) {
+	            return null;
+	        }
+	        var previousDayValue = data.totalValue - data.dayChange;
+	        if (Math.abs(previousDayValue) < 1e-6) {
+	            return null;
+	        }
+	        return (data.dayChange / previousDayValue) * 100;
+	    };
+	    PFUnsoldAssetsStore.prototype.getDayChangePercentForSymbol = function (symbol) {
+	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
+	        if (data.dayChange === null) {
+	            return null;
+	        }
+	        var previousDayValue = data.totalValue - data.dayChange;
+	        return (data.dayChange / previousDayValue) * 100;
+	    };
+	    PFUnsoldAssetsStore.prototype.getOverallGain = function () {
+	        var data = this.getTotalValueAndBasisAndDayChange();
+	        if (data.totalValue === null) {
+	            return null;
+	        }
+	        return data.totalValue - data.totalBasis;
+	    };
+	    PFUnsoldAssetsStore.prototype.getOverallGainForSymbol = function (symbol) {
+	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
+	        if (data.totalValue === null) {
+	            return null;
+	        }
+	        return data.totalValue - data.totalBasis;
+	    };
+	    PFUnsoldAssetsStore.prototype.getOverallGainPercent = function () {
+	        var data = this.getTotalValueAndBasisAndDayChange();
+	        if (data.totalValue === null) {
+	            return null;
+	        }
+	        if (Math.abs(data.totalBasis) < 1e-6) {
+	            return null;
+	        }
+	        return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
+	    };
+	    PFUnsoldAssetsStore.prototype.getOverallGainPercentForSymbol = function (symbol) {
+	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
+	        if (data.totalValue === null) {
+	            return null;
+	        }
+	        if (Math.abs(data.totalBasis) < 1e-6) {
+	            return null;
+	        }
+	        return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
+	    };
+	    PFUnsoldAssetsStore.prototype.reduce = function (state, action) {
 	        var assets = state.get('assets');
 	        switch (action.type) {
 	            case PFActionTypes_1.default.COOKIE_DATA_LOADED:
@@ -1995,9 +2106,9 @@
 	                return state;
 	        }
 	    };
-	    return PFAssetsStore;
+	    return PFUnsoldAssetsStore;
 	}(utils_1.ReduceStore));
-	exports.default = new PFAssetsStore(PFDispatcher_1.PFDispatcher);
+	exports.default = new PFUnsoldAssetsStore(PFDispatcher_1.PFDispatcher);
 
 
 /***/ }),
@@ -7448,66 +7559,117 @@
 	    };
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
+	var immutable_1 = __webpack_require__(27);
+	var utils_1 = __webpack_require__(9);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var State = /** @class */ (function (_super) {
+	    __extends(State, _super);
+	    function State() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    return State;
+	}(immutable_1.Record({
+	    marketData: {},
+	})));
+	var PFMarketDataStore = /** @class */ (function (_super) {
+	    __extends(PFMarketDataStore, _super);
+	    function PFMarketDataStore() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFMarketDataStore.prototype.getInitialState = function () {
+	        return new State();
+	    };
+	    PFMarketDataStore.prototype.reduce = function (state, action) {
+	        switch (action.type) {
+	            case PFActionTypes_1.default.MARKET_DATA_UPDATE:
+	                return state.set('marketData', action.data);
+	            default:
+	                return state;
+	        }
+	    };
+	    return PFMarketDataStore;
+	}(utils_1.ReduceStore));
+	exports.default = new PFMarketDataStore(PFDispatcher_1.PFDispatcher);
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(37);
-	var classNames = __webpack_require__(39);
-	var util_1 = __webpack_require__(40);
+	__webpack_require__(38);
+	var classNames = __webpack_require__(40);
+	var util_1 = __webpack_require__(41);
 	var PFSummary = /** @class */ (function (_super) {
 	    __extends(PFSummary, _super);
 	    function PFSummary() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
 	    PFSummary.prototype.render = function () {
-	        var _this = this;
-	        var totalBasis = 0;
-	        var totalValue = 0;
-	        var isFetching = false;
-	        this.props.assets.forEach(function (rows, key) {
-	            rows.forEach(function (row) {
-	                totalBasis += row.quantity * row.basis;
-	                if (isFetching) {
-	                    return;
-	                }
-	                var symbolData = _this.props.marketData[row.symbol];
-	                if (!symbolData) {
-	                    isFetching = true;
-	                    return;
-	                }
-	                totalValue += row.quantity * symbolData.latestPrice;
-	            });
-	        });
-	        var profitText = '';
-	        var profit = isFetching ? null : totalValue - totalBasis;
-	        var isNeutral = isFetching || Math.abs(totalBasis - totalValue) < 1e-6;
-	        var hasProfit = !isNeutral && totalValue > totalBasis;
-	        var hasLoss = !isNeutral && totalValue < totalBasis;
-	        if (profit !== null) {
-	            profitText = profit.toFixed(2);
-	            if (hasProfit) {
-	                profitText = '+' + profitText;
+	        var hasDayLoss = this.props.dayChange !== null && this.props.dayChange < -1e-6;
+	        var hasDayProfit = this.props.dayChange !== null && this.props.dayChange > 1e-6;
+	        var hasOverallProfit = this.props.overallGain !== null && this.props.overallGain > 1e-6;
+	        var hasOverallLoss = this.props.overallGain !== null && this.props.overallGain < -1e-6;
+	        var dayChange = '...';
+	        if (this.props.dayChange !== null) {
+	            dayChange = util_1.format(this.props.dayChange.toFixed(2));
+	            if (hasDayProfit) {
+	                dayChange = '+' + dayChange;
 	            }
 	        }
-	        var profitPercent = null;
-	        if (profit !== null && totalBasis > 0) {
-	            profitPercent = (profit / totalBasis * 100).toFixed(2);
+	        var dayChangePercent = '';
+	        if (this.props.dayChangePercent !== null) {
+	            dayChangePercent = this.props.dayChangePercent.toFixed(2) + '%';
+	            dayChangePercent = '(' + dayChangePercent + ')';
+	        }
+	        var overallGain = '';
+	        if (this.props.overallGain !== null) {
+	            overallGain = this.props.overallGain.toFixed(2);
+	            if (hasOverallProfit) {
+	                overallGain = '+' + overallGain;
+	            }
+	        }
+	        var overallGainPercent = null;
+	        if (this.props.overallGainPercent !== null) {
+	            overallGainPercent = this.props.overallGainPercent.toFixed(2) + '%';
+	            overallGainPercent = '(' + overallGainPercent + ')';
 	        }
 	        return React.createElement("div", { className: "pf-summary" },
 	            React.createElement("div", null,
-	                React.createElement("div", { className: "pf-summary-item-label" }, "Gain/Loss"),
-	                React.createElement("div", { className: classNames({ 'pf-color-red': hasLoss, 'pf-color-green': hasProfit }) },
-	                    isFetching ? '...' : util_1.format(profitText),
-	                    " ",
-	                    profitPercent === null ? '' : '(' + profitPercent + '%)')),
+	                React.createElement("div", { className: "pf-summary-item-label" }, "Day Change"),
+	                React.createElement("div", { className: classNames({ 'pf-color-red': hasDayLoss, 'pf-color-green': hasDayProfit }) },
+	                    dayChange,
+	                    ' ',
+	                    dayChangePercent)),
+	            React.createElement("div", null,
+	                React.createElement("div", { className: "pf-summary-item-label" }, "Overall Gain/Loss"),
+	                React.createElement("div", { className: classNames({ 'pf-color-red': hasOverallLoss, 'pf-color-green': hasOverallProfit }) },
+	                    overallGain,
+	                    ' ',
+	                    overallGainPercent)),
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Total Value"),
 	                React.createElement("div", null,
 	                    " ",
-	                    isFetching ? '...' : util_1.format(totalValue.toFixed(2)))),
+	                    this.props.totalValue === null ? '...' : util_1.format(this.props.totalValue.toFixed(2)))),
 	            React.createElement("div", null,
 	                React.createElement("div", { className: "pf-summary-item-label" }, "Cost Basis"),
 	                React.createElement("div", null,
 	                    " ",
-	                    util_1.format(totalBasis.toFixed(2)))));
+	                    util_1.format(this.props.totalBasis.toFixed(2)))));
 	    };
 	    return PFSummary;
 	}(React.Component));
@@ -7515,14 +7677,14 @@
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 38 */,
-/* 39 */
+/* 39 */,
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -7576,7 +7738,7 @@
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -7585,56 +7747,6 @@
 	    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
 	exports.format = format;
-
-
-/***/ }),
-/* 41 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-	var __extends = (this && this.__extends) || (function () {
-	    var extendStatics = Object.setPrototypeOf ||
-	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-	    return function (d, b) {
-	        extendStatics(d, b);
-	        function __() { this.constructor = d; }
-	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	    };
-	})();
-	Object.defineProperty(exports, "__esModule", { value: true });
-	var immutable_1 = __webpack_require__(27);
-	var utils_1 = __webpack_require__(9);
-	var PFDispatcher_1 = __webpack_require__(29);
-	var PFActionTypes_1 = __webpack_require__(32);
-	var State = /** @class */ (function (_super) {
-	    __extends(State, _super);
-	    function State() {
-	        return _super !== null && _super.apply(this, arguments) || this;
-	    }
-	    return State;
-	}(immutable_1.Record({
-	    marketData: {},
-	})));
-	var PFMarketDataStore = /** @class */ (function (_super) {
-	    __extends(PFMarketDataStore, _super);
-	    function PFMarketDataStore() {
-	        return _super !== null && _super.apply(this, arguments) || this;
-	    }
-	    PFMarketDataStore.prototype.getInitialState = function () {
-	        return new State();
-	    };
-	    PFMarketDataStore.prototype.reduce = function (state, action) {
-	        switch (action.type) {
-	            case PFActionTypes_1.default.MARKET_DATA_UPDATE:
-	                return state.set('marketData', action.data);
-	            default:
-	                return state;
-	        }
-	    };
-	    return PFMarketDataStore;
-	}(utils_1.ReduceStore));
-	exports.default = new PFMarketDataStore(PFDispatcher_1.PFDispatcher);
 
 
 /***/ }),
@@ -7672,7 +7784,7 @@
 	var React = __webpack_require__(6);
 	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
 	var PFUnsoldStocks_1 = __webpack_require__(45);
-	var PFMarketDataStore_1 = __webpack_require__(41);
+	var PFMarketDataStore_1 = __webpack_require__(36);
 	var PFUnsoldStocksContainer = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocksContainer, _super);
 	    function PFUnsoldStocksContainer() {
@@ -7787,10 +7899,10 @@
 	        var header = React.createElement("div", { className: "pf-table-header" },
 	            React.createElement("div", { className: "pf-header-symbol" }, "Symbol"),
 	            React.createElement("div", { className: "pf-header-price" }, "Current Price"),
-	            React.createElement("div", { className: "pf-header-quantity" }, "Quantity"),
-	            React.createElement("div", { className: "pf-header-basis" }, "Avg Buying Price"),
-	            React.createElement("div", { className: "pf-header-current-value" }, "Value"),
-	            React.createElement("div", { className: "pf-header-gain" }, "Gain/Loss"));
+	            React.createElement("div", { className: "pf-header-avg-buy-price" }, "Avg Buy Price"),
+	            React.createElement("div", { className: "pf-header-day-change" }, "Day Change"),
+	            React.createElement("div", { className: "pf-header-overall-change" }, "Overall G/L"),
+	            React.createElement("div", { className: "pf-header-actions" }, "Actions"));
 	        var table = React.createElement("div", { className: "pf-table" }, this.props.assets.map(function (assetRows) {
 	            if (assetRows.length === 0) {
 	                return null;
@@ -7845,8 +7957,8 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	__webpack_require__(49);
-	var classNames = __webpack_require__(39);
-	var util_1 = __webpack_require__(40);
+	var classNames = __webpack_require__(40);
+	var util_1 = __webpack_require__(41);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var PFStockPriceTag_1 = __webpack_require__(51);
@@ -7879,6 +7991,7 @@
 	    }
 	    PFAggregatedAssetRow.prototype.render = function () {
 	        var _this = this;
+	        // TODO: refactor the following code to use functions in the PFUnsoldAssetStore.
 	        var expanded = this.state.expanded;
 	        var symbol = this.props.transactions[0].symbol;
 	        var symbolData = this.props.marketData[symbol];
@@ -7886,46 +7999,90 @@
 	            || null;
 	        var lastClose = symbolData && symbolData.previousClose
 	            || null;
+	        var symbolDayChange = curPrice !== null && curPrice - lastClose || null;
 	        var totalQuantity = 0, totalBasis = 0;
 	        this.props.transactions.forEach(function (transaction) {
 	            totalQuantity += transaction.quantity;
 	            totalBasis += transaction.basis * transaction.quantity;
 	        });
+	        var symbolTotalDayChange = symbolDayChange !== null && symbolDayChange * totalQuantity || null;
+	        var dayChangeText = '...';
+	        if (symbolTotalDayChange !== null) {
+	            dayChangeText = util_1.format(symbolTotalDayChange.toFixed(2));
+	            if (dayChangeText[0] !== '-') {
+	                dayChangeText = '+' + dayChangeText;
+	            }
+	        }
 	        var avgPrice = totalBasis / totalQuantity;
 	        var totalValue = curPrice === null ? null : (curPrice * totalQuantity);
-	        var summaryRow = (React.createElement("div", { className: "pf-row" },
+	        var overallGainPercent = curPrice && (curPrice - avgPrice) / avgPrice * 100 || null;
+	        var overallGainPercentText = '';
+	        if (overallGainPercent !== null) {
+	            overallGainPercentText = overallGainPercent.toFixed(2) + '%';
+	            if (overallGainPercentText[0] !== '-') {
+	                overallGainPercentText = '+' + overallGainPercentText;
+	            }
+	            overallGainPercentText = '(' + overallGainPercentText + ')';
+	        }
+	        var hasDayProfit = curPrice !== null && curPrice - lastClose > 1e-6;
+	        var hasDayLoss = curPrice !== null && curPrice - lastClose < 1e-6;
+	        var summaryRow = (React.createElement("div", { className: "pf-symbol-summary", onClick: this._onClick },
 	            React.createElement("div", { className: "pf-row-symbol" },
 	                React.createElement("div", null, symbol),
-	                React.createElement("div", { className: "pf-company-name" }, symbolData && symbolData.companyName)),
+	                React.createElement("div", { className: "pf-row-company-name" }, symbolData && symbolData.companyName)),
 	            React.createElement("div", { className: 'pf-row-price' },
 	                React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode })),
-	            React.createElement("div", { className: "pf-row-quantity" }, util_1.format(totalQuantity)),
-	            React.createElement("div", { className: "pf-row-basis" }, util_1.format(avgPrice.toFixed(2))),
-	            React.createElement("div", { className: "pf-row-current-value" }, totalValue === null ? '...' : util_1.format(totalValue.toFixed(2))),
+	            React.createElement("div", { className: "pf-row-avg-buy-price" },
+	                React.createElement("div", null, util_1.format(avgPrice.toFixed(2))),
+	                React.createElement("div", { className: "pf-row-quantity" },
+	                    "(",
+	                    util_1.format(totalQuantity),
+	                    " stocks)")),
 	            React.createElement("div", { className: classNames({
-	                    'pf-row-gain': true,
-	                    'pf-color-red': totalValue < totalBasis,
-	                    'pf-color-green': totalValue > totalBasis
-	                }) }, totalValue === null ? '...' : util_1.format((totalValue - totalBasis).toFixed(2))),
+	                    'pf-row-day-change': true,
+	                    'pf-color-red': hasDayLoss,
+	                    'pf-color-green': hasDayProfit
+	                }) }, dayChangeText),
+	            React.createElement("div", { className: classNames({
+	                    'pf-row-overall-change': true,
+	                    'pf-color-red': curPrice !== null && totalValue < totalBasis,
+	                    'pf-color-green': curPrice !== null && totalValue > totalBasis
+	                }) },
+	                totalValue === null ? '...' : util_1.format((totalValue - totalBasis).toFixed(2)),
+	                " ",
+	                overallGainPercentText),
 	            React.createElement("div", { className: "pf-row-actions" },
 	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
-	        return (React.createElement("div", { className: "pf-item", key: symbol, onClick: this._onClick },
+	        return (React.createElement("div", { className: "pf-item", key: symbol },
 	            summaryRow,
 	            expanded ?
-	                React.createElement("div", { style: { marginTop: '8px' } }, this.props.transactions.map(function (row, index) {
-	                    return (React.createElement("div", { className: "pf-row", key: index },
-	                        React.createElement("div", { className: "pf-row-symbol", style: { visibility: 'hidden' } }, symbol),
-	                        React.createElement("div", { className: "pf-row-price", style: { visibility: 'hidden' } }, curPrice !== null ? util_1.format(curPrice.toFixed(2)) : '...'),
-	                        React.createElement("div", { className: "pf-row-quantity" }, util_1.format(row.quantity)),
-	                        React.createElement("div", { className: "pf-row-basis" }, util_1.format(row.basis.toFixed(2))),
-	                        React.createElement("div", { className: "pf-row-current-value" }, curPrice ? util_1.format((curPrice * row.quantity).toFixed(2)) : '...'),
+	                React.createElement("div", { className: "pf-symbol-details" }, this.props.transactions.map(function (row, index) {
+	                    var overallGainText = curPrice ? util_1.format(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
+	                    var overallGainPercent = curPrice ? ((curPrice - row.basis) / row.basis * 100).toFixed(2) + '%' : '';
+	                    if (overallGainPercent) {
+	                        overallGainPercent = '(' + overallGainPercent + ')';
+	                    }
+	                    return (React.createElement("div", { className: "pf-symbol-detail-row", key: index },
+	                        React.createElement("div", { className: "pf-symbol-detail-buy-price" },
+	                            util_1.format(row.quantity),
+	                            " stocks @ ",
+	                            util_1.format(row.basis.toFixed(2))),
 	                        React.createElement("div", { className: classNames({
-	                                'pf-row-gain': true,
-	                                'pf-color-red': curPrice !== null && curPrice < row.basis,
-	                                'pf-color-green': curPrice !== null && curPrice > row.basis
+	                                'pf-symbol-detail-day-change': true,
+	                                'pf-color-red': hasDayLoss,
+	                                'pf-color-green': hasDayProfit
+	                            }) }, symbolDayChange === null
+	                            ? '...'
+	                            : util_1.format((symbolDayChange * row.quantity).toFixed(2))),
+	                        React.createElement("div", { className: classNames({
+	                                'pf-symbol-detail-overall-gain': true,
+	                                'pf-color-red': curPrice !== null && curPrice - row.basis < 1e-6,
+	                                'pf-color-green': curPrice !== null && curPrice - row.basis > 1e-6
 	                            }) },
 	                            " ",
-	                            curPrice ? util_1.format(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...'),
+	                            overallGainText,
+	                            ' ',
+	                            overallGainPercent),
 	                        React.createElement("div", { className: "pf-row-actions" },
 	                            React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteClick(event, symbol, index); } }, "delete"))));
 	                }))
@@ -7962,8 +8119,8 @@
 	var React = __webpack_require__(6);
 	var types_1 = __webpack_require__(33);
 	__webpack_require__(49);
-	var classNames = __webpack_require__(39);
-	var util_1 = __webpack_require__(40);
+	var classNames = __webpack_require__(40);
+	var util_1 = __webpack_require__(41);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var PFStockPriceTag = /** @class */ (function (_super) {

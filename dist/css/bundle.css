@@ -67,60 +67,84 @@ body {
 .pf-row-symbol,
 .pf-header-symbol {
   text-align: left;
-  padding-left: 4px;
-  width: 100px;
+  width: 120px;
 }
 .pf-row-price,
 .pf-header-price {
+  text-align: left;
+  width: 130px;
+}
+.pf-row-avg-buy-price,
+.pf-header-avg-buy-price,
+.pf-symbol-detail-buy-price {
+  text-align: left;
+  width: 130px;
+}
+.pf-row-day-change,
+.pf-header-day-change,
+.pf-symbol-detail-day-change {
+  text-align: right;
   width: 120px;
 }
-.pf-row-quantity,
-.pf-header-quantity {
+.pf-row-overall-change,
+.pf-header-overall-change,
+.pf-symbol-detail-overall-gain {
+  text-align: right;
+  width: 160px;
+}
+.pf-row-actions,
+.pf-header-actions {
+  text-align: right;
   width: 100px;
 }
-.pf-row-current-value,
-.pf-header-current-value {
-  width: 140px;
-}
-.pf-row-basis,
-.pf-header-basis {
-  width: 140px;
-}
-.pf-row-gain,
-.pf-header-gain {
-  width: 110px;
-  text-align: right;
-  padding-right: 4px;
-}
 .pf-item {
-  cursor: pointer;
-  padding: 8px 0;
   border-top: 1px solid #dfdfdf;
 }
-.pf-item:hover {
-  background-color: #fafafa;
-}
-.pf-row {
+.pf-symbol-summary {
   display: flex;
   flex-direction: row;
   align-items: center;
   text-align: center;
+  height: 46px;
+  cursor: pointer;
 }
-.pf-row:not(:first-child) {
+.pf-symbol-summary:not(:first-child) {
   margin-top: 4px;
 }
-.pf-row-symbol .pf-company-name {
+.pf-symbol-summary:hover {
+  background-color: #fafafa;
+}
+.pf-symbol-details {
+  margin-top: 4px;
+  margin-left: 240px;
+}
+.pf-symbol-details .pf-symbol-detail-row {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.pf-symbol-details .pf-symbol-detail-row:hover {
+  background-color: #fafafa;
+}
+.pf-row-symbol .pf-row-company-name {
   font-size: 12px;
   color: #939a9e;
 }
 .pf-row-price {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+}
+.pf-row-avg-buy-price .pf-row-quantity {
+  margin-top: 2px;
+  color: #939a9e;
+  font-size: 12px;
 }
 .pf-price {
   border-radius: 2px;
   color: white;
   width: 56px;
+  text-align: center;
   padding: 4px 4px;
 }
 .pf-price.pf-price-green {
@@ -129,13 +153,9 @@ body {
 .pf-price.pf-price-red {
   background-color: #ff2d2d;
 }
-.pf-row-actions {
-  width: 50px;
-  text-align: center;
-}
 .pf-row-actions a {
   font-size: 12px;
-  color: #a4a7af;
+  color: #939a9e;
 }
 .pf-color-red {
   color: #ff2d2d;

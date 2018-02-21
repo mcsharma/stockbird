@@ -85,10 +85,10 @@ export class PFUnsoldStocks extends React.Component<Props> {
     const header = <div className="pf-table-header">
       <div className="pf-header-symbol">Symbol</div>
       <div className="pf-header-price">Current Price</div>
-      <div className="pf-header-quantity">Quantity</div>
-      <div className="pf-header-basis">Avg Buying Price</div>
-      <div className="pf-header-current-value">Value</div>
-      <div className="pf-header-gain">Gain/Loss</div>
+      <div className="pf-header-avg-buy-price">Avg Buy Price</div>
+      <div className="pf-header-day-change">Day Change</div>
+      <div className="pf-header-overall-change">Overall G/L</div>
+      <div className="pf-header-actions">Actions</div>
     </div>;
     const table = <div className="pf-table">
       {this.props.assets.map((assetRows) => {

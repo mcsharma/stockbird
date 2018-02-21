@@ -10,6 +10,12 @@ import {PFSymbol, PFSymbolToStockDataPoint} from '../types/types';
 type State = {
   assets: OrderedMap<PFSymbol, List<PFTradeItem>>,
   marketData: PFSymbolToStockDataPoint,
+  dayChange: number | null,
+  dayChangePercent: number | null,
+  overallGain: number|null,
+  overallGainPercent: number|null,
+  totalValue: number| null,
+  totalBasis: number|null,
 };
 
 class PFSummaryContainer extends React.PureComponent<{}, State> {
@@ -20,10 +26,17 @@ class PFSummaryContainer extends React.PureComponent<{}, State> {
 
   static calculateState(prevState: State): State {
     const assets = PFUnsoldAssetsStore.getState().get('assets');
-    const marketData = PFMarketDataStore.getState().get('marketData');
+    const marketDataState = PFMarketDataStore.getState();
+    const {dayChange, totalValue, totalBasis} = PFUnsoldAssetsStore.getTotalValueAndBasisAndDayChange();
     return {
       assets,
-      marketData,
+      marketData: marketDataState.marketData,
+      dayChange,
+      dayChangePercent: PFUnsoldAssetsStore.getDayChangePercent(),
+      overallGain: PFUnsoldAssetsStore.getOverallGain(),
+      overallGainPercent: PFUnsoldAssetsStore.getOverallGainPercent(),
+      totalValue,
+      totalBasis,
     };
   }
 
