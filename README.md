@@ -1,4 +1,4 @@
-# Portfolio
+# Stock Bird
 Sweet and simple web app to track your stock portfolio in real time.
 
 Hosted on Heroku: https://stockbird.herokuapp.com/

@@ -1,5 +1,5 @@
 {
-  "name": "portfolio",
+  "name": "stockbird",
   "version": "1.1.0",
   "description": "Web App to manage stocks portfolio",
   "main": "./dist/bundle.js",
