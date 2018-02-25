@@ -4,7 +4,7 @@ import {PFSymbolToMetadata, PFSymbolToStockDataPoint, PriceDisplayMode} from '..
 import '../../css/pf-aggregated-row.less';
 
 import classNames = require('classnames');
-import {formatNum} from '../util';
+import {formatInt} from '../util';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
 import {PFStockPriceTag} from './PFStockPriceTag';
@@ -71,7 +71,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
     let symbolTotalDayChange = symbolDayChange !== null && symbolDayChange * totalQuantity || null;
     let dayChangeText = '...';
     if (symbolTotalDayChange !== null) {
-      dayChangeText = formatNum(symbolTotalDayChange.toFixed(2));
+      dayChangeText = formatInt(symbolTotalDayChange.toFixed(2));
       if (dayChangeText[0] !== '-') {
         dayChangeText = '+' + dayChangeText;
       }
@@ -110,8 +110,8 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
         </div>
       </div>
       <div className="pf-row-avg-buy-price">
-        <div>{formatNum(avgPrice.toFixed(2))}</div>
-        <div className="pf-row-quantity">({formatNum(totalQuantity)} stocks)</div>
+        <div>{formatInt(avgPrice.toFixed(2))}</div>
+        <div className="pf-row-quantity">({formatInt(totalQuantity)} stocks)</div>
       </div>
       <div
         className={classNames({
@@ -129,7 +129,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
             'pf-color-green': curPrice !== null && totalValue > totalBasis
           }
         )}>
-        {totalValue === null ? '...' : formatNum((totalValue - totalBasis).toFixed(2))} {overallGainPercentText}
+        {totalValue === null ? '...' : formatInt((totalValue - totalBasis).toFixed(2))} {overallGainPercentText}
       </div>
       <div className="pf-row-actions">
         <a href="#" onClick={(event) => this._onRowDeleteAllClick(event, symbol)}>delete</a>
@@ -142,14 +142,14 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
       {expanded ?
         <div className="pf-symbol-details">
           {this.props.transactions.map((row, index) => {
-              const overallGainText = curPrice ? formatNum(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
+              const overallGainText = curPrice ? formatInt(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
               let overallGainPercent = curPrice ? ((curPrice - row.basis) / row.basis * 100).toFixed(2) + '%' : '';
               if (overallGainPercent) {
                 overallGainPercent = '(' + overallGainPercent + ')';
               }
               return (<div className="pf-symbol-detail-row" key={index}>
                 <div className="pf-symbol-detail-buy-price">
-                  {formatNum(row.quantity)} stocks @ {formatNum(row.basis.toFixed(2))}
+                  {formatInt(row.quantity)} stocks @ {formatInt(row.basis.toFixed(2))}
                 </div>
                 <div className={classNames({
                   'pf-symbol-detail-day-change': true,
@@ -158,7 +158,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
                 })}>
                   {symbolDayChange === null
                     ? '...'
-                    : formatNum((symbolDayChange * row.quantity).toFixed(2))}</div>
+                    : formatInt((symbolDayChange * row.quantity).toFixed(2))}</div>
                 <div
                   className={classNames({
                     'pf-symbol-detail-overall-gain': true,

@@ -4,8 +4,8 @@ import classNames = require('classnames');
 import {formatGainOrLoss} from '../util';
 
 type Props = {
-  current: number,
-  previous: number,
+  current: number|null,
+  previous: number|null,
   showGreenOnNeutral?: boolean, // default is false.
   showPercent?: boolean, // default is true
   showCurrentValue?: boolean, // default is false

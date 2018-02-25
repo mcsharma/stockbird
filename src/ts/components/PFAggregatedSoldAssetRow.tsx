@@ -6,7 +6,7 @@ import '../../css/pf-aggregated-row.less';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
 import {List} from 'immutable';
-import {formatNum} from '../util';
+import {formatFloat, formatInt} from '../util';
 import {PFMarketNumber} from './PFMarketNumber';
 
 type Props = {
@@ -58,7 +58,7 @@ export class PFAggregatedSoldAssetRow extends React.Component<Props, State> {
           <div className="pf-row-company-name">{this.props.symbolMetadata && this.props.symbolMetadata.companyName}</div>
         </div>
         <div className="pf-sold-row-details">
-          <div>Invested {formatNum(this.props.totalQuantity)}</div>
+          <div>Invested {formatFloat(this.props.totalBasis)}</div>
         </div>
         <div className="pf-sold-row-gain"><
           PFMarketNumber current={this.props.totalValue} previous={this.props.totalBasis}/>

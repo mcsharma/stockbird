@@ -1,13 +1,12 @@
-export function formatNum(x) {
+export function formatInt(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-export function formatPercent(x: number, options: any = {needSign: true}) {
-  let ans = formatNum(x.toFixed(2)) + '%';
-  if (options.needSign && ans[0] !== '-') {
-    ans = '+' + ans;
+export function formatFloat(x): string {
+  if (x === null) {
+    return '...';
   }
-  return ans;
+  return x.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 export function formatGainOrLoss(current: number, previous: number, options: any = {
@@ -16,7 +15,7 @@ export function formatGainOrLoss(current: number, previous: number, options: any
 }) {
   const gain = current - previous;
   const value = options.showCurrentValue ? current : gain;
-  let ans = formatNum(value.toFixed(2));
+  let ans = formatFloat(value);
   if (!options.showCurrentValue && value > 1e-6 && ans[0] !== '-') {
     ans = '+' + ans;
   }
