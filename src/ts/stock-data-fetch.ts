@@ -1,21 +1,20 @@
-import PFUnsoldAssetsStore from './stores/PFUnsoldAssetsStore';
+import PFUnsoldAssetsStore from './stores/PFAssetsStore';
 import {PFDispatcher} from './dispatcher/PFDispatcher';
 import PFActionTypes from './types/PFActionTypes';
-import {PFSymbolToStockDataPoint} from './types/types';
-import {Simulate} from 'react-dom/test-utils';
+import {PFSymbolToMetadata, PFSymbolToStockDataPoint} from './types/types';
+import {Set} from 'immutable';
+import PFWatchlistStore from './stores/PFWatchlistStore';
 
-export type StockDataPoint = {
-  latestPrice: number,
-  previousClose: number,
-  companyName: string,
-};
-
-export function fetchAndUpdateStockData() {
-  const allSymbols = PFUnsoldAssetsStore.getState().get('assets').keySeq().toArray();
-  return fetchStockData(allSymbols).then(data => {
+export function fetchAndUpdateStockData(symbols: string[] = []) {
+  const assets = PFUnsoldAssetsStore.getState().get('assets');
+  const allSymbols = Set.fromKeys(assets)
+    .concat(PFWatchlistStore.getState().symbols)
+    .concat(symbols)
+    .toArray();
+  return fetchStockData(allSymbols as string[]).then(result => {
     PFDispatcher.dispatch({
       type: PFActionTypes.MARKET_DATA_UPDATE,
-      data,
+      result,
     });
   });
 }
@@ -28,21 +27,24 @@ export function recursivelyFetchAndUpdateStockData() {
   });
 }
 
-function fetchStockData(symbols: string[]): Promise<PFSymbolToStockDataPoint> {
+export type StockFetchResult = { data: PFSymbolToStockDataPoint, metadata: PFSymbolToMetadata };
+
+function fetchStockData(symbols: string[]): Promise<StockFetchResult> {
+  const result = {data: {}, metadata: {}};
   if (symbols.length === 0) {
-    return Promise.resolve({});
+    return Promise.resolve(result);
   }
-  return new Promise<PFSymbolToStockDataPoint>((resolve, reject) => {
+  return new Promise<StockFetchResult>((resolve, reject) => {
     const url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
     httpGetAsync(url, (response) => {
       const responseJson = JSON.parse(response);
-      const result = {};
       symbols.forEach((symbol) => {
           const quote = responseJson[symbol].quote;
           const latestPrice = quote.latestPrice as number;
           const previousClose = quote.previousClose as number;
           const companyName = quote.companyName as string;
-          result[symbol] = {latestPrice, previousClose, companyName};
+          result.data[symbol] = {latestPrice, previousClose};
+          result.metadata[symbol] = {companyName};
         }
       );
       resolve(result);

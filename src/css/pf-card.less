@@ -1,0 +1,53 @@
+.pf-card {
+  border: 1px solid #dddfe2;
+  background-color: white;
+  border-radius: 4px;
+  min-height: 88px;
+  padding: 20px;
+  font-size: 13px;
+  box-shadow: #d4d4d4 10px 0 50px 0;
+}
+
+.pf-table-header {
+  color: #1d2129;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.pf-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-watchlist {
+  .pf-table-header {
+    justify-content: space-between;
+    border-bottom: 1px solid #dfdfdf;
+    padding-bottom: 8px;
+  }
+  .pf-watchlist-rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .pf-watchlist-input-row {
+    display: flex;
+    margin-top: 16px;
+    .pf-watchlist-symbol-input {
+      width: 60px;
+    }
+  }
+  .pf-watchlist-row {
+    &:not(:first-child) {
+      margin-top: 8px;
+    }
+    &:not(:last-child) {
+      padding-bottom: 4px;
+    }
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}

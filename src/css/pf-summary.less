@@ -1,15 +1,22 @@
 .pf-summary {
-  border: 1px solid #e0e0e0;
-  box-shadow: #d4d4d4 10px 0 50px 0;
-  background-color: white;
-  border-radius: 4px;
-  height: 60px;
-  padding: 20px;
   display: flex;
-  font-size: 18px;
   justify-content: space-between;
+  font-size: 18px;
   .pf-summary-item-label {
+    color: #1d2129;
     font-weight: bold;
+    font-size: 16px;
     margin-bottom: 12px;
+  }
+
+  .pf-summary-unrealized {
+    .pf-market-fund-value {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #939a9e;
+    }
+  }
+  .pf-summary-realized, .pf-summary-unrealized, .pf-summary-overall {
+    text-align: right;
   }
 }

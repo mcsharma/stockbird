@@ -56,15 +56,19 @@
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var mutableAssets = JSON.parse(cookies_1.getCookie('assets') || '{}');
+	var mutableWatchlist = JSON.parse(cookies_1.getCookie('watchlist') || '[]');
 	var assets = immutable_1.OrderedMap(mutableAssets)
 	    .map(function (rows, symbol) { return immutable_1.List(rows).map(function (row) {
 	    row.quantity = +row.quantity;
 	    row.basis = +row.basis;
+	    row.tid = +row.tid;
 	    return new pf_trade_items_1.PFTradeItem(row);
 	}); });
+	var watchlist = immutable_1.List(mutableWatchlist);
 	PFDispatcher_1.PFDispatcher.dispatch({
 	    type: PFActionTypes_1.default.COOKIE_DATA_LOADED,
 	    assets: assets,
+	    watchlist: watchlist,
 	});
 	ReactDOM.render(React.createElement(PFRoot_1.PFRoot, null), document.getElementById('root-container'));
 
@@ -108,9 +112,14 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	var PFSummaryContainer_1 = __webpack_require__(8);
-	__webpack_require__(42);
 	var PFUnsoldStocksContainer_1 = __webpack_require__(44);
 	var stock_data_fetch_1 = __webpack_require__(35);
+	var PFSoldStocksContainer_1 = __webpack_require__(50);
+	__webpack_require__(55);
+	__webpack_require__(52);
+	__webpack_require__(57);
+	__webpack_require__(40);
+	var PFWatchlistContainer_1 = __webpack_require__(59);
 	var PFRoot = /** @class */ (function (_super) {
 	    __extends(PFRoot, _super);
 	    function PFRoot(props) {
@@ -123,12 +132,20 @@
 	        return (React.createElement("div", { className: "pf-root" },
 	            React.createElement("div", { className: "pf-chrome" }),
 	            React.createElement("div", { className: "pf-body" },
-	                React.createElement("div", { style: { marginTop: '20px' } },
-	                    React.createElement("div", { className: "pf-main-item-label" }, "Summary"),
-	                    React.createElement(PFSummaryContainer_1.default, null)),
-	                React.createElement("div", { style: { marginTop: '20px' } },
-	                    React.createElement("div", { className: "pf-main-item-label" }, "Unsold Stocks"),
-	                    React.createElement(PFUnsoldStocksContainer_1.default, null)))));
+	                React.createElement("div", { className: "pf-left-col" },
+	                    React.createElement("div", { style: { marginTop: '20px' } },
+	                        React.createElement("div", { className: "pf-main-item-label" }, "Summary"),
+	                        React.createElement(PFSummaryContainer_1.default, null)),
+	                    React.createElement("div", { style: { marginTop: '20px' } },
+	                        React.createElement("div", { className: "pf-main-item-label" }, "Unsold Stocks"),
+	                        React.createElement(PFUnsoldStocksContainer_1.default, null)),
+	                    React.createElement("div", { style: { marginTop: '20px' } },
+	                        React.createElement("div", { className: "pf-main-item-label" }, "Sold Stocks"),
+	                        React.createElement(PFSoldStocksContainer_1.default, null))),
+	                React.createElement("div", { className: "pf-right-col" },
+	                    React.createElement("div", { style: { marginTop: '20px' } },
+	                        React.createElement("div", { className: "pf-main-item-label" }, "Watchlist"),
+	                        React.createElement(PFWatchlistContainer_1.default, null))))));
 	    };
 	    return PFRoot;
 	}(React.Component));
@@ -161,30 +178,28 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
-	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
-	var PFSummary_1 = __webpack_require__(37);
-	var PFMarketDataStore_1 = __webpack_require__(36);
+	var PFAssetsStore_1 = __webpack_require__(26);
+	var PFSummary_1 = __webpack_require__(38);
+	var PFMarketDataStore_1 = __webpack_require__(37);
 	var PFSummaryContainer = /** @class */ (function (_super) {
 	    __extends(PFSummaryContainer, _super);
 	    function PFSummaryContainer() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
 	    PFSummaryContainer.getStores = function () {
-	        return [PFUnsoldAssetsStore_1.default, PFMarketDataStore_1.default];
+	        return [PFAssetsStore_1.default, PFMarketDataStore_1.default];
 	    };
 	    PFSummaryContainer.calculateState = function (prevState) {
-	        var assets = PFUnsoldAssetsStore_1.default.getState().get('assets');
-	        var marketDataState = PFMarketDataStore_1.default.getState();
-	        var _a = PFUnsoldAssetsStore_1.default.getTotalValueAndBasisAndDayChange(), dayChange = _a.dayChange, totalValue = _a.totalValue, totalBasis = _a.totalBasis;
+	        var marketData = PFMarketDataStore_1.default.getState().marketData;
+	        var _a = PFAssetsStore_1.default.getDetailsForUnsoldSymbols(), marketFundPreviousCloseValue = _a.marketFundPreviousCloseValue, marketFundValue = _a.marketFundValue, marketFundCostBasis = _a.marketFundCostBasis;
+	        var _b = PFAssetsStore_1.default.getSummaryForSoldSymbols(), soldFundCostBasis = _b.soldFundCostBasis, soldFundValue = _b.soldFundValue;
 	        return {
-	            assets: assets,
-	            marketData: marketDataState.marketData,
-	            dayChange: dayChange,
-	            dayChangePercent: PFUnsoldAssetsStore_1.default.getDayChangePercent(),
-	            overallGain: PFUnsoldAssetsStore_1.default.getOverallGain(),
-	            overallGainPercent: PFUnsoldAssetsStore_1.default.getOverallGainPercent(),
-	            totalValue: totalValue,
-	            totalBasis: totalBasis,
+	            marketData: marketData,
+	            marketFundCostBasis: marketFundCostBasis,
+	            marketFundValue: marketFundValue,
+	            marketFundPreviousCloseValue: marketFundPreviousCloseValue,
+	            soldFundCostBasis: soldFundCostBasis,
+	            soldFundValue: soldFundValue,
 	        };
 	    };
 	    PFSummaryContainer.prototype.render = function () {
@@ -1911,7 +1926,7 @@
 	var types_1 = __webpack_require__(33);
 	var cookies_1 = __webpack_require__(34);
 	var stock_data_fetch_1 = __webpack_require__(35);
-	var PFMarketDataStore_1 = __webpack_require__(36);
+	var PFMarketDataStore_1 = __webpack_require__(37);
 	var DEFAULT_STATE = {
 	    assets: immutable_1.OrderedMap(),
 	    draftItem: null,
@@ -1924,25 +1939,26 @@
 	    }
 	    return State;
 	}(immutable_1.Record(DEFAULT_STATE)));
-	var PFUnsoldAssetsStore = /** @class */ (function (_super) {
-	    __extends(PFUnsoldAssetsStore, _super);
-	    function PFUnsoldAssetsStore() {
+	var PFAssetsStore = /** @class */ (function (_super) {
+	    __extends(PFAssetsStore, _super);
+	    function PFAssetsStore() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
-	    PFUnsoldAssetsStore.prototype.getInitialState = function () {
+	    PFAssetsStore.prototype.getInitialState = function () {
 	        return new State();
 	    };
 	    /**
 	     * Gets the aggregated data for a given set of symbols, if symbols is an empty array, returns
 	     * data for all the symbols.
 	     * @param {Array<PFSymbol>} symbols
-	     * @returns {{totalValue: number; totalBasis: number; dayChange: number}}
+	     * @returns {{totalValue: number; totalBasis: number; quantityBySymbol: Object; dayChange: number}}
 	     */
-	    PFUnsoldAssetsStore.prototype.getTotalValueAndBasisAndDayChange = function (symbols) {
+	    PFAssetsStore.prototype.getDetailsForUnsoldSymbols = function (symbols) {
 	        if (symbols === void 0) { symbols = []; }
-	        var totalBasis = 0;
-	        var totalValue = 0;
-	        var dayChange = 0;
+	        var marketFundCostBasis = 0;
+	        var marketFundValue = 0;
+	        var marketFundPreviousCloseValue = 0;
+	        var quantityBySymbol = {};
 	        var isFetching = false;
 	        var marketData = PFMarketDataStore_1.default.getState().marketData;
 	        this.getState().assets.forEach(function (rows, symbol) {
@@ -1951,7 +1967,12 @@
 	                return;
 	            }
 	            rows.forEach(function (row) {
-	                totalBasis += row.quantity * row.basis;
+	                if (row.sellPrice !== null) {
+	                    return;
+	                }
+	                marketFundCostBasis += row.quantity * row.basis;
+	                quantityBySymbol[row.symbol] = quantityBySymbol[row.symbol] || 0;
+	                quantityBySymbol[row.symbol] += row.quantity;
 	                if (isFetching) {
 	                    return;
 	                }
@@ -1960,82 +1981,59 @@
 	                    isFetching = true;
 	                    return;
 	                }
-	                totalValue += row.quantity * symbolData.latestPrice;
-	                dayChange += row.quantity * (symbolData.latestPrice - symbolData.previousClose);
+	                marketFundValue += row.quantity * symbolData.latestPrice;
+	                marketFundPreviousCloseValue += row.quantity * symbolData.previousClose;
 	            });
 	        });
 	        return {
-	            dayChange: isFetching ? null : dayChange,
-	            totalBasis: totalBasis,
-	            totalValue: isFetching ? null : totalValue,
+	            marketFundCostBasis: marketFundCostBasis,
+	            quantityBySymbol: quantityBySymbol,
+	            marketFundValue: isFetching ? null : marketFundValue,
+	            marketFundPreviousCloseValue: isFetching ? null : marketFundPreviousCloseValue,
 	        };
 	    };
-	    PFUnsoldAssetsStore.prototype.getTotalCostBasis = function () {
-	        return this.getTotalValueAndBasisAndDayChange().totalBasis;
+	    PFAssetsStore.prototype.getDetailsForSoldSymbols = function (symbols) {
+	        if (symbols === void 0) { symbols = []; }
+	        var quantityBySymbol = {};
+	        var valueBySymbol = {};
+	        var basisBySymbol = {};
+	        var isFetching = false;
+	        this.getState().assets.forEach(function (rows, symbol) {
+	            if (symbols.length > 0 && symbols.indexOf(symbol) === -1) {
+	                // a symbols for which caller don't want data.
+	                return;
+	            }
+	            rows.forEach(function (row) {
+	                if (row.sellPrice === null) {
+	                    return;
+	                }
+	                quantityBySymbol[row.symbol] = quantityBySymbol[row.symbol] || 0;
+	                quantityBySymbol[row.symbol] += row.quantity;
+	                valueBySymbol[row.symbol] = valueBySymbol[row.symbol] || 0;
+	                valueBySymbol[row.symbol] += row.quantity * row.sellPrice;
+	                basisBySymbol[row.symbol] = basisBySymbol[row.symbol] || 0;
+	                basisBySymbol[row.symbol] += row.quantity * row.basis;
+	            });
+	        });
+	        return {
+	            quantityBySymbol: quantityBySymbol,
+	            basisBySymbol: basisBySymbol,
+	            valueBySymbol: valueBySymbol,
+	        };
 	    };
-	    PFUnsoldAssetsStore.prototype.getTotalValue = function () {
-	        return this.getTotalValueAndBasisAndDayChange().totalValue;
+	    PFAssetsStore.prototype.getSummaryForSoldSymbols = function () {
+	        var details = this.getDetailsForSoldSymbols();
+	        var soldFundValue = 0, soldFundCostBasis = 0;
+	        Object.keys(details.basisBySymbol).forEach(function (symbol) {
+	            soldFundCostBasis += details.basisBySymbol[symbol];
+	            soldFundValue += details.valueBySymbol[symbol];
+	        });
+	        return {
+	            soldFundValue: soldFundValue,
+	            soldFundCostBasis: soldFundCostBasis,
+	        };
 	    };
-	    PFUnsoldAssetsStore.prototype.getDayChange = function () {
-	        return this.getTotalValueAndBasisAndDayChange().dayChange;
-	    };
-	    PFUnsoldAssetsStore.prototype.getDayChangeForSymbol = function (symbol) {
-	        return this.getTotalValueAndBasisAndDayChange([symbol]).dayChange;
-	    };
-	    PFUnsoldAssetsStore.prototype.getDayChangePercent = function () {
-	        var data = this.getTotalValueAndBasisAndDayChange();
-	        if (data.dayChange === null || data.totalValue === null) {
-	            return null;
-	        }
-	        var previousDayValue = data.totalValue - data.dayChange;
-	        if (Math.abs(previousDayValue) < 1e-6) {
-	            return null;
-	        }
-	        return (data.dayChange / previousDayValue) * 100;
-	    };
-	    PFUnsoldAssetsStore.prototype.getDayChangePercentForSymbol = function (symbol) {
-	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
-	        if (data.dayChange === null) {
-	            return null;
-	        }
-	        var previousDayValue = data.totalValue - data.dayChange;
-	        return (data.dayChange / previousDayValue) * 100;
-	    };
-	    PFUnsoldAssetsStore.prototype.getOverallGain = function () {
-	        var data = this.getTotalValueAndBasisAndDayChange();
-	        if (data.totalValue === null) {
-	            return null;
-	        }
-	        return data.totalValue - data.totalBasis;
-	    };
-	    PFUnsoldAssetsStore.prototype.getOverallGainForSymbol = function (symbol) {
-	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
-	        if (data.totalValue === null) {
-	            return null;
-	        }
-	        return data.totalValue - data.totalBasis;
-	    };
-	    PFUnsoldAssetsStore.prototype.getOverallGainPercent = function () {
-	        var data = this.getTotalValueAndBasisAndDayChange();
-	        if (data.totalValue === null) {
-	            return null;
-	        }
-	        if (Math.abs(data.totalBasis) < 1e-6) {
-	            return null;
-	        }
-	        return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
-	    };
-	    PFUnsoldAssetsStore.prototype.getOverallGainPercentForSymbol = function (symbol) {
-	        var data = this.getTotalValueAndBasisAndDayChange([symbol]);
-	        if (data.totalValue === null) {
-	            return null;
-	        }
-	        if (Math.abs(data.totalBasis) < 1e-6) {
-	            return null;
-	        }
-	        return (data.totalValue - data.totalBasis) / data.totalBasis * 100;
-	    };
-	    PFUnsoldAssetsStore.prototype.reduce = function (state, action) {
+	    PFAssetsStore.prototype.reduce = function (state, action) {
 	        var assets = state.get('assets');
 	        switch (action.type) {
 	            case PFActionTypes_1.default.COOKIE_DATA_LOADED:
@@ -2056,7 +2054,8 @@
 	            case PFActionTypes_1.default.UNSOLD_DRAFT_DELETE:
 	                return state.set('draftItem', null);
 	            case PFActionTypes_1.default.UNSOLD_DRAFT_SAVE:
-	                var draftItem = state.get('draftItem');
+	            case PFActionTypes_1.default.SOLD_DRAFT_SAVE:
+	                var draftItem = (action.draftItem ? action.draftItem : state.get('draftItem'));
 	                var symbol = draftItem.symbol;
 	                if (!symbol ||
 	                    !symbol.match(/^[A-Z]+$/) ||
@@ -2065,10 +2064,15 @@
 	                    isNaN(+draftItem.basis)) {
 	                    return state;
 	                }
+	                var transactions = assets.get(symbol);
+	                var tid = !transactions || transactions.size === 0 ? 0
+	                    : transactions.maxBy(function (t) { return t.tid; }).tid + 1;
 	                var realItem = new pf_trade_items_1.PFTradeItem({
+	                    tid: tid,
 	                    symbol: draftItem.symbol,
 	                    quantity: +draftItem.quantity,
 	                    basis: +draftItem.basis,
+	                    sellPrice: draftItem.sellPrice && (+draftItem.sellPrice) || null,
 	                });
 	                if (!assets.get(symbol)) {
 	                    assets = assets.set(symbol, immutable_1.List.of(realItem));
@@ -2078,7 +2082,7 @@
 	                }
 	                state = state.set('assets', assets);
 	                state = state.set('draftItem', null);
-	                var _ = stock_data_fetch_1.fetchAndUpdateStockData();
+	                var _ = stock_data_fetch_1.fetchAndUpdateStockData(state.assets.keySeq().toArray());
 	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
 	                return state;
 	            case PFActionTypes_1.default.UNSOLD_DELETE_ROW:
@@ -2102,13 +2106,26 @@
 	            case PFActionTypes_1.default.UNSOLD_PRICE_DISPLAY_MODE_CHANGE:
 	                state = state.set('priceDisplayMode', (state.priceDisplayMode + 1) % 2);
 	                return state;
+	            // ******************************* SOLD Actions *******************************************
+	            case PFActionTypes_1.default.SOLD_DELETE_SYMBOL:
+	                items = assets.get(action.symbol);
+	                items = items.filter(function (item) { return item.sellPrice === null; });
+	                if (items.size === 0) {
+	                    assets = assets.delete(action.symbol);
+	                }
+	                else {
+	                    assets = assets.set(action.symbol, items);
+	                }
+	                state = state.set('assets', assets);
+	                cookies_1.setCookie('assets', JSON.stringify(state.assets));
+	                return state;
 	            default:
 	                return state;
 	        }
 	    };
-	    return PFUnsoldAssetsStore;
+	    return PFAssetsStore;
 	}(utils_1.ReduceStore));
-	exports.default = new PFUnsoldAssetsStore(PFDispatcher_1.PFDispatcher);
+	exports.default = new PFAssetsStore(PFDispatcher_1.PFDispatcher);
 
 
 /***/ }),
@@ -7111,6 +7128,7 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var immutable_1 = __webpack_require__(27);
 	var DEFAULT_VALUES = {
+	    tid: 0,
 	    symbol: '',
 	    buyDate: null,
 	    basis: 0,
@@ -7428,6 +7446,10 @@
 	    UNSOLD_PRICE_DISPLAY_MODE_CHANGE: 'UNSOLD_PRICE_DISPLAY_MODE_CHANGE',
 	    COOKIE_DATA_LOADED: 'COOKIE_DATA_LOADED',
 	    MARKET_DATA_UPDATE: 'MARKET_DATA_UPDATE',
+	    SOLD_DELETE_SYMBOL: 'SOLD_DELETE_SYMBOL',
+	    SOLD_DRAFT_SAVE: 'SOLD_DRAFT_SAVE',
+	    ADD_SYMBOL: 'ADD_SYMBOL',
+	    WATCHLIST_ADD_ITEM: 'WATCHLIST_ADD_ITEM',
 	};
 	exports.default = PFActionTypes;
 
@@ -7440,7 +7462,7 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var PriceDisplayMode;
 	(function (PriceDisplayMode) {
-	    PriceDisplayMode[PriceDisplayMode["PER_SHARE_PRICE"] = 0] = "PER_SHARE_PRICE";
+	    PriceDisplayMode[PriceDisplayMode["ABSOLUTE_CHANGE"] = 0] = "ABSOLUTE_CHANGE";
 	    PriceDisplayMode[PriceDisplayMode["PERCENT_CHANGE"] = 1] = "PERCENT_CHANGE";
 	})(PriceDisplayMode = exports.PriceDisplayMode || (exports.PriceDisplayMode = {}));
 
@@ -7482,15 +7504,22 @@
 
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
-	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
+	var PFAssetsStore_1 = __webpack_require__(26);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	function fetchAndUpdateStockData() {
-	    var allSymbols = PFUnsoldAssetsStore_1.default.getState().get('assets').keySeq().toArray();
-	    return fetchStockData(allSymbols).then(function (data) {
+	var immutable_1 = __webpack_require__(27);
+	var PFWatchlistStore_1 = __webpack_require__(36);
+	function fetchAndUpdateStockData(symbols) {
+	    if (symbols === void 0) { symbols = []; }
+	    var assets = PFAssetsStore_1.default.getState().get('assets');
+	    var allSymbols = immutable_1.Set.fromKeys(assets)
+	        .concat(PFWatchlistStore_1.default.getState().symbols)
+	        .concat(symbols)
+	        .toArray();
+	    return fetchStockData(allSymbols).then(function (result) {
 	        PFDispatcher_1.PFDispatcher.dispatch({
 	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
-	            data: data,
+	            result: result,
 	        });
 	    });
 	}
@@ -7504,20 +7533,21 @@
 	}
 	exports.recursivelyFetchAndUpdateStockData = recursivelyFetchAndUpdateStockData;
 	function fetchStockData(symbols) {
+	    var result = { data: {}, metadata: {} };
 	    if (symbols.length === 0) {
-	        return Promise.resolve({});
+	        return Promise.resolve(result);
 	    }
 	    return new Promise(function (resolve, reject) {
 	        var url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
 	        httpGetAsync(url, function (response) {
 	            var responseJson = JSON.parse(response);
-	            var result = {};
 	            symbols.forEach(function (symbol) {
 	                var quote = responseJson[symbol].quote;
 	                var latestPrice = quote.latestPrice;
 	                var previousClose = quote.previousClose;
 	                var companyName = quote.companyName;
-	                result[symbol] = { latestPrice: latestPrice, previousClose: previousClose, companyName: companyName };
+	                result.data[symbol] = { latestPrice: latestPrice, previousClose: previousClose };
+	                result.metadata[symbol] = { companyName: companyName };
 	            });
 	            resolve(result);
 	        }, function () {
@@ -7563,6 +7593,8 @@
 	var utils_1 = __webpack_require__(9);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
+	var stock_data_fetch_1 = __webpack_require__(35);
+	var cookies_1 = __webpack_require__(34);
 	var State = /** @class */ (function (_super) {
 	    __extends(State, _super);
 	    function State() {
@@ -7570,27 +7602,33 @@
 	    }
 	    return State;
 	}(immutable_1.Record({
-	    marketData: {},
+	    symbols: immutable_1.List(),
 	})));
-	var PFMarketDataStore = /** @class */ (function (_super) {
-	    __extends(PFMarketDataStore, _super);
-	    function PFMarketDataStore() {
+	var PFWatchlistStore = /** @class */ (function (_super) {
+	    __extends(PFWatchlistStore, _super);
+	    function PFWatchlistStore() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
-	    PFMarketDataStore.prototype.getInitialState = function () {
+	    PFWatchlistStore.prototype.getInitialState = function () {
 	        return new State();
 	    };
-	    PFMarketDataStore.prototype.reduce = function (state, action) {
+	    PFWatchlistStore.prototype.reduce = function (state, action) {
 	        switch (action.type) {
-	            case PFActionTypes_1.default.MARKET_DATA_UPDATE:
-	                return state.set('marketData', action.data);
+	            case PFActionTypes_1.default.COOKIE_DATA_LOADED:
+	                state = state.set('symbols', action.watchlist);
+	                return state;
+	            case PFActionTypes_1.default.WATCHLIST_ADD_ITEM:
+	                state = state.set('symbols', state.symbols.push(action.symbol.toUpperCase()));
+	                var _ = stock_data_fetch_1.fetchAndUpdateStockData(state.symbols.toArray());
+	                cookies_1.setCookie('watchlist', JSON.stringify(state.symbols.toArray()));
+	                return state;
 	            default:
 	                return state;
 	        }
 	    };
-	    return PFMarketDataStore;
+	    return PFWatchlistStore;
 	}(utils_1.ReduceStore));
-	exports.default = new PFMarketDataStore(PFDispatcher_1.PFDispatcher);
+	exports.default = new PFWatchlistStore(PFDispatcher_1.PFDispatcher);
 
 
 /***/ }),
@@ -7609,67 +7647,86 @@
 	    };
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
+	var immutable_1 = __webpack_require__(27);
+	var utils_1 = __webpack_require__(9);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var State = /** @class */ (function (_super) {
+	    __extends(State, _super);
+	    function State() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    return State;
+	}(immutable_1.Record({
+	    marketData: {},
+	    marketMetadata: {},
+	})));
+	var PFMarketDataStore = /** @class */ (function (_super) {
+	    __extends(PFMarketDataStore, _super);
+	    function PFMarketDataStore() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFMarketDataStore.prototype.getInitialState = function () {
+	        return new State();
+	    };
+	    PFMarketDataStore.prototype.reduce = function (state, action) {
+	        switch (action.type) {
+	            case PFActionTypes_1.default.MARKET_DATA_UPDATE:
+	                state = state.set('marketMetadata', action.result.metadata);
+	                return state.set('marketData', action.result.data);
+	            default:
+	                return state;
+	        }
+	    };
+	    return PFMarketDataStore;
+	}(utils_1.ReduceStore));
+	exports.default = new PFMarketDataStore(PFDispatcher_1.PFDispatcher);
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(38);
-	var classNames = __webpack_require__(40);
-	var util_1 = __webpack_require__(41);
+	var PFMarketNumber_1 = __webpack_require__(39);
+	var util_1 = __webpack_require__(43);
 	var PFSummary = /** @class */ (function (_super) {
 	    __extends(PFSummary, _super);
 	    function PFSummary() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
 	    PFSummary.prototype.render = function () {
-	        var hasDayLoss = this.props.dayChange !== null && this.props.dayChange < -1e-6;
-	        var hasDayProfit = this.props.dayChange !== null && this.props.dayChange > 1e-6;
-	        var hasOverallProfit = this.props.overallGain !== null && this.props.overallGain > 1e-6;
-	        var hasOverallLoss = this.props.overallGain !== null && this.props.overallGain < -1e-6;
-	        var dayChange = '...';
-	        if (this.props.dayChange !== null) {
-	            dayChange = util_1.format(this.props.dayChange.toFixed(2));
-	            if (hasDayProfit) {
-	                dayChange = '+' + dayChange;
-	            }
-	        }
-	        var dayChangePercent = '';
-	        if (this.props.dayChangePercent !== null) {
-	            dayChangePercent = this.props.dayChangePercent.toFixed(2) + '%';
-	            dayChangePercent = '(' + dayChangePercent + ')';
-	        }
-	        var overallGain = '';
-	        if (this.props.overallGain !== null) {
-	            overallGain = this.props.overallGain.toFixed(2);
-	            if (hasOverallProfit) {
-	                overallGain = '+' + overallGain;
-	            }
-	        }
-	        var overallGainPercent = null;
-	        if (this.props.overallGainPercent !== null) {
-	            overallGainPercent = this.props.overallGainPercent.toFixed(2) + '%';
-	            overallGainPercent = '(' + overallGainPercent + ')';
-	        }
-	        return React.createElement("div", { className: "pf-summary" },
-	            React.createElement("div", null,
-	                React.createElement("div", { className: "pf-summary-item-label" }, "Day Change"),
-	                React.createElement("div", { className: classNames({ 'pf-color-red': hasDayLoss, 'pf-color-green': hasDayProfit }) },
-	                    dayChange,
-	                    ' ',
-	                    dayChangePercent)),
-	            React.createElement("div", null,
-	                React.createElement("div", { className: "pf-summary-item-label" }, "Overall Gain/Loss"),
-	                React.createElement("div", { className: classNames({ 'pf-color-red': hasOverallLoss, 'pf-color-green': hasOverallProfit }) },
-	                    overallGain,
-	                    ' ',
-	                    overallGainPercent)),
-	            React.createElement("div", null,
-	                React.createElement("div", { className: "pf-summary-item-label" }, "Total Value"),
-	                React.createElement("div", null,
-	                    " ",
-	                    this.props.totalValue === null ? '...' : util_1.format(this.props.totalValue.toFixed(2)))),
-	            React.createElement("div", null,
-	                React.createElement("div", { className: "pf-summary-item-label" }, "Cost Basis"),
-	                React.createElement("div", null,
-	                    " ",
-	                    util_1.format(this.props.totalBasis.toFixed(2)))));
+	        return (React.createElement("div", { className: "pf-card" },
+	            React.createElement("div", { className: "pf-summary" },
+	                React.createElement("div", { className: "pf-summary-day-change" },
+	                    React.createElement("div", { className: "pf-summary-item-label" }, "Day Change"),
+	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.marketFundValue, previous: this.props.marketFundPreviousCloseValue, showGreenOnNeutral: true })),
+	                React.createElement("div", { className: "pf-summary-unrealized" },
+	                    React.createElement("div", { className: "pf-summary-item-label" }, "Unrealized (G/L)"),
+	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.marketFundValue, previous: this.props.marketFundCostBasis }),
+	                    React.createElement("div", { className: "pf-market-fund-value" },
+	                        "(",
+	                        this.props.marketFundValue === null ? '...' : util_1.formatNum(this.props.marketFundValue),
+	                        " asset value)")),
+	                React.createElement("div", { className: "pf-summary-realized" },
+	                    React.createElement("div", { className: "pf-summary-item-label" }, "Realized (G/L)"),
+	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.soldFundValue, previous: this.props.soldFundCostBasis })),
+	                React.createElement("div", { className: "pf-summary-overall" },
+	                    React.createElement("div", { className: "pf-summary-item-label" }, "Overall (G/L)"),
+	                    this.props.marketFundValue === null ? '...' :
+	                        React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.soldFundValue + this.props.marketFundValue, previous: this.props.soldFundCostBasis + this.props.marketFundCostBasis })))));
 	    };
 	    return PFSummary;
 	}(React.Component));
@@ -7677,14 +7734,58 @@
 
 
 /***/ }),
-/* 38 */
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(40);
+	var classNames = __webpack_require__(42);
+	var util_1 = __webpack_require__(43);
+	var PFMarketNumber = /** @class */ (function (_super) {
+	    __extends(PFMarketNumber, _super);
+	    function PFMarketNumber() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFMarketNumber.prototype.render = function () {
+	        if (this.props.current === null || this.props.previous === null) {
+	            return React.createElement("div", { className: "pf-market-num" }, "...");
+	        }
+	        var isProfit = this.props.current - this.props.previous > 1e-6;
+	        var isLoss = this.props.current - this.props.previous < -1e-6;
+	        if (!isProfit && !isLoss && this.props.showGreenOnNeutral === true) {
+	            isProfit = true;
+	        }
+	        return (React.createElement("div", { className: classNames({ 'pf-market-num': true, 'pf-color-red': isLoss, 'pf-color-green': isProfit }) }, util_1.formatGainOrLoss(this.props.current, this.props.previous, {
+	            showPercent: this.props.showPercent !== false,
+	            showCurrentValue: this.props.showCurrentValue
+	        })));
+	    };
+	    return PFMarketNumber;
+	}(React.Component));
+	exports.PFMarketNumber = PFMarketNumber;
+
+
+/***/ }),
+/* 40 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 39 */,
-/* 40 */
+/* 41 */,
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -7738,25 +7839,48 @@
 
 
 /***/ }),
-/* 41 */
+/* 43 */
 /***/ (function(module, exports) {
 
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
-	function format(x) {
+	function formatNum(x) {
 	    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
-	exports.format = format;
+	exports.formatNum = formatNum;
+	function formatPercent(x, options) {
+	    if (options === void 0) { options = { needSign: true }; }
+	    var ans = formatNum(x.toFixed(2)) + '%';
+	    if (options.needSign && ans[0] !== '-') {
+	        ans = '+' + ans;
+	    }
+	    return ans;
+	}
+	exports.formatPercent = formatPercent;
+	function formatGainOrLoss(current, previous, options) {
+	    if (options === void 0) { options = {
+	        showCurrentValue: false,
+	        showPercent: true,
+	    }; }
+	    var gain = current - previous;
+	    var value = options.showCurrentValue ? current : gain;
+	    var ans = formatNum(value.toFixed(2));
+	    if (!options.showCurrentValue && value > 1e-6 && ans[0] !== '-') {
+	        ans = '+' + ans;
+	    }
+	    if (options.showPercent && Math.abs(previous) > 1e-6) {
+	        ans += ' (';
+	        if (options.showCurrentValue && current - previous > 1e-6) {
+	            ans += '+';
+	        }
+	        ans += (gain / previous * 100).toFixed(2) + '%)';
+	    }
+	    return ans;
+	}
+	exports.formatGainOrLoss = formatGainOrLoss;
 
 
 /***/ }),
-/* 42 */
-/***/ (function(module, exports) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 43 */,
 /* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -7782,24 +7906,25 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var utils_1 = __webpack_require__(9);
 	var React = __webpack_require__(6);
-	var PFUnsoldAssetsStore_1 = __webpack_require__(26);
+	var PFAssetsStore_1 = __webpack_require__(26);
 	var PFUnsoldStocks_1 = __webpack_require__(45);
-	var PFMarketDataStore_1 = __webpack_require__(36);
+	var PFMarketDataStore_1 = __webpack_require__(37);
 	var PFUnsoldStocksContainer = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocksContainer, _super);
 	    function PFUnsoldStocksContainer() {
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
 	    PFUnsoldStocksContainer.getStores = function () {
-	        return [PFUnsoldAssetsStore_1.default, PFMarketDataStore_1.default];
+	        return [PFAssetsStore_1.default, PFMarketDataStore_1.default];
 	    };
 	    PFUnsoldStocksContainer.calculateState = function (prevState) {
-	        var state = PFUnsoldAssetsStore_1.default.getState();
+	        var state = PFAssetsStore_1.default.getState();
 	        var marketState = PFMarketDataStore_1.default.getState();
 	        return {
 	            assets: state.get('assets').toArray().map(function (item) { return item.toArray(); }),
 	            draftItem: state.get('draftItem'),
 	            marketData: marketState.marketData,
+	            marketMetadata: marketState.marketMetadata,
 	            priceDisplayMode: state.priceDisplayMode,
 	        };
 	    };
@@ -7828,10 +7953,9 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(46);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFAggregatedAssetRow_1 = __webpack_require__(48);
+	var PFAggregatedAssetRow_1 = __webpack_require__(46);
 	var PFUnsoldStocks = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocks, _super);
 	    function PFUnsoldStocks() {
@@ -7907,7 +8031,11 @@
 	            if (assetRows.length === 0) {
 	                return null;
 	            }
-	            return (React.createElement(PFAggregatedAssetRow_1.PFAggregatedAssetRow, { key: assetRows[0].symbol, transactions: assetRows, marketData: _this.props.marketData, priceDisplayMode: _this.props.priceDisplayMode }));
+	            var unsoldTransactions = assetRows.filter(function (row) { return row.sellPrice === null; });
+	            if (unsoldTransactions.length === 0) {
+	                return null;
+	            }
+	            return (React.createElement(PFAggregatedAssetRow_1.PFAggregatedAssetRow, { key: assetRows[0].symbol, transactions: unsoldTransactions, marketData: _this.props.marketData, marketMetadata: _this.props.marketMetadata, priceDisplayMode: _this.props.priceDisplayMode }));
 	        }));
 	        var draftItem = null, addButton = null;
 	        if (this.props.draftItem) {
@@ -7921,7 +8049,7 @@
 	        else {
 	            addButton = React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry");
 	        }
-	        return (React.createElement("div", { className: "pf-unsold-card" },
+	        return (React.createElement("div", { className: "pf-card" },
 	            header,
 	            table,
 	            draftItem,
@@ -7934,13 +8062,6 @@
 
 /***/ }),
 /* 46 */
-/***/ (function(module, exports) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 47 */,
-/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7956,12 +8077,13 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(49);
-	var classNames = __webpack_require__(40);
-	var util_1 = __webpack_require__(41);
+	__webpack_require__(47);
+	var classNames = __webpack_require__(42);
+	var util_1 = __webpack_require__(43);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFStockPriceTag_1 = __webpack_require__(51);
+	var PFStockPriceTag_1 = __webpack_require__(49);
+	var PFMarketNumber_1 = __webpack_require__(39);
 	var PFAggregatedAssetRow = /** @class */ (function (_super) {
 	    __extends(PFAggregatedAssetRow, _super);
 	    function PFAggregatedAssetRow() {
@@ -7995,6 +8117,7 @@
 	        var expanded = this.state.expanded;
 	        var symbol = this.props.transactions[0].symbol;
 	        var symbolData = this.props.marketData[symbol];
+	        var symbolMetaData = this.props.marketMetadata[symbol];
 	        var curPrice = symbolData && symbolData.latestPrice
 	            || null;
 	        var lastClose = symbolData && symbolData.previousClose
@@ -8008,7 +8131,7 @@
 	        var symbolTotalDayChange = symbolDayChange !== null && symbolDayChange * totalQuantity || null;
 	        var dayChangeText = '...';
 	        if (symbolTotalDayChange !== null) {
-	            dayChangeText = util_1.format(symbolTotalDayChange.toFixed(2));
+	            dayChangeText = util_1.formatNum(symbolTotalDayChange.toFixed(2));
 	            if (dayChangeText[0] !== '-') {
 	                dayChangeText = '+' + dayChangeText;
 	            }
@@ -8026,17 +8149,20 @@
 	        }
 	        var hasDayProfit = curPrice !== null && curPrice - lastClose > 1e-6;
 	        var hasDayLoss = curPrice !== null && curPrice - lastClose < 1e-6;
-	        var summaryRow = (React.createElement("div", { className: "pf-symbol-summary", onClick: this._onClick },
+	        var summaryRow = (React.createElement("div", { className: "pf-unsold-symbol-summary", onClick: this._onClick },
 	            React.createElement("div", { className: "pf-row-symbol" },
 	                React.createElement("div", null, symbol),
-	                React.createElement("div", { className: "pf-row-company-name" }, symbolData && symbolData.companyName)),
+	                React.createElement("div", { className: "pf-row-company-name" }, symbolMetaData && symbolMetaData.companyName)),
 	            React.createElement("div", { className: 'pf-row-price' },
-	                React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode })),
+	                React.createElement("div", { className: "pf-row-price-absolute" },
+	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: curPrice, previous: lastClose, showCurrentValue: true, showPercent: false })),
+	                React.createElement("div", { className: "pf-row-price-tag" },
+	                    React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode }))),
 	            React.createElement("div", { className: "pf-row-avg-buy-price" },
-	                React.createElement("div", null, util_1.format(avgPrice.toFixed(2))),
+	                React.createElement("div", null, util_1.formatNum(avgPrice.toFixed(2))),
 	                React.createElement("div", { className: "pf-row-quantity" },
 	                    "(",
-	                    util_1.format(totalQuantity),
+	                    util_1.formatNum(totalQuantity),
 	                    " stocks)")),
 	            React.createElement("div", { className: classNames({
 	                    'pf-row-day-change': true,
@@ -8048,7 +8174,7 @@
 	                    'pf-color-red': curPrice !== null && totalValue < totalBasis,
 	                    'pf-color-green': curPrice !== null && totalValue > totalBasis
 	                }) },
-	                totalValue === null ? '...' : util_1.format((totalValue - totalBasis).toFixed(2)),
+	                totalValue === null ? '...' : util_1.formatNum((totalValue - totalBasis).toFixed(2)),
 	                " ",
 	                overallGainPercentText),
 	            React.createElement("div", { className: "pf-row-actions" },
@@ -8057,23 +8183,23 @@
 	            summaryRow,
 	            expanded ?
 	                React.createElement("div", { className: "pf-symbol-details" }, this.props.transactions.map(function (row, index) {
-	                    var overallGainText = curPrice ? util_1.format(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
+	                    var overallGainText = curPrice ? util_1.formatNum(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
 	                    var overallGainPercent = curPrice ? ((curPrice - row.basis) / row.basis * 100).toFixed(2) + '%' : '';
 	                    if (overallGainPercent) {
 	                        overallGainPercent = '(' + overallGainPercent + ')';
 	                    }
 	                    return (React.createElement("div", { className: "pf-symbol-detail-row", key: index },
 	                        React.createElement("div", { className: "pf-symbol-detail-buy-price" },
-	                            util_1.format(row.quantity),
+	                            util_1.formatNum(row.quantity),
 	                            " stocks @ ",
-	                            util_1.format(row.basis.toFixed(2))),
+	                            util_1.formatNum(row.basis.toFixed(2))),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-symbol-detail-day-change': true,
 	                                'pf-color-red': hasDayLoss,
 	                                'pf-color-green': hasDayProfit
 	                            }) }, symbolDayChange === null
 	                            ? '...'
-	                            : util_1.format((symbolDayChange * row.quantity).toFixed(2))),
+	                            : util_1.formatNum((symbolDayChange * row.quantity).toFixed(2))),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-symbol-detail-overall-gain': true,
 	                                'pf-color-red': curPrice !== null && curPrice - row.basis < 1e-6,
@@ -8094,14 +8220,14 @@
 
 
 /***/ }),
-/* 49 */
+/* 47 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 50 */,
-/* 51 */
+/* 48 */,
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8118,9 +8244,9 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	var types_1 = __webpack_require__(33);
-	__webpack_require__(49);
-	var classNames = __webpack_require__(40);
-	var util_1 = __webpack_require__(41);
+	__webpack_require__(47);
+	var classNames = __webpack_require__(42);
+	var util_1 = __webpack_require__(43);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var PFStockPriceTag = /** @class */ (function (_super) {
@@ -8143,8 +8269,11 @@
 	        var priceIncreased = !priceNeutral && curPrice > lastClose;
 	        var priceDecreased = !priceNeutral && curPrice < lastClose;
 	        var priceDisplay = '...';
-	        if (curPrice !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.PER_SHARE_PRICE) {
-	            priceDisplay = util_1.format(curPrice.toFixed(2));
+	        if (curPrice !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.ABSOLUTE_CHANGE) {
+	            priceDisplay = util_1.formatNum((curPrice - lastClose).toFixed(2));
+	            if (priceNeutral || priceIncreased) {
+	                priceDisplay = '+' + priceDisplay;
+	            }
 	        }
 	        else if (curPrice !== null && lastClose !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.PERCENT_CHANGE) {
 	            var percentChange = curPrice && lastClose &&
@@ -8163,6 +8292,400 @@
 	    return PFStockPriceTag;
 	}(React.Component));
 	exports.PFStockPriceTag = PFStockPriceTag;
+
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	var __assign = (this && this.__assign) || Object.assign || function(t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+	            t[p] = s[p];
+	    }
+	    return t;
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var utils_1 = __webpack_require__(9);
+	var React = __webpack_require__(6);
+	var PFAssetsStore_1 = __webpack_require__(26);
+	var PFMarketDataStore_1 = __webpack_require__(37);
+	var PFSoldStocks_1 = __webpack_require__(51);
+	var PFSoldStocksContainer = /** @class */ (function (_super) {
+	    __extends(PFSoldStocksContainer, _super);
+	    function PFSoldStocksContainer() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFSoldStocksContainer.getStores = function () {
+	        return [PFAssetsStore_1.default, PFMarketDataStore_1.default];
+	    };
+	    PFSoldStocksContainer.calculateState = function (prevState) {
+	        var state = PFAssetsStore_1.default.getState();
+	        var details = PFAssetsStore_1.default.getDetailsForSoldSymbols();
+	        var marketMetadata = PFMarketDataStore_1.default.getState().marketMetadata;
+	        return __assign({}, details, { marketMetadata: marketMetadata, transactionsBySymbol: state.assets.map(function (rows) {
+	                return rows.filter(function (row) { return row.sellPrice !== null; });
+	            }) });
+	    };
+	    PFSoldStocksContainer.prototype.render = function () {
+	        return React.createElement(PFSoldStocks_1.PFSoldStocks, __assign({}, this.state));
+	    };
+	    return PFSoldStocksContainer;
+	}(React.PureComponent));
+	exports.default = utils_1.Container.create(PFSoldStocksContainer);
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(52);
+	var pf_trade_items_1 = __webpack_require__(28);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var PFAggregatedSoldAssetRow_1 = __webpack_require__(54);
+	var PFSoldStocks = /** @class */ (function (_super) {
+	    __extends(PFSoldStocks, _super);
+	    function PFSoldStocks() {
+	        var _this = _super !== null && _super.apply(this, arguments) || this;
+	        _this.state = {};
+	        _this._onAddClick = function () {
+	            _this.setState({ draftItem: new pf_trade_items_1.PFTradeDraftItem() });
+	        };
+	        _this._onSaveClick = function () {
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.SOLD_DRAFT_SAVE,
+	                draftItem: _this.state.draftItem,
+	            });
+	            _this._onDeleteDraft();
+	        };
+	        _this._onDeleteRow = function (symbol, index) {
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_DELETE_ROW,
+	                symbol: symbol,
+	                index: index,
+	            });
+	        };
+	        _this._onQuantityChange = function (symbol, index, value) {
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_QUANTITY_UPDATE,
+	                symbol: symbol,
+	                index: index,
+	                value: value,
+	            });
+	        };
+	        _this._onBasisChange = function (symbol, index, value) {
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_BASIS_UPDATE,
+	                symbol: symbol,
+	                index: index,
+	                value: value,
+	            });
+	        };
+	        _this._onDraftSymbolChange = function (value) {
+	            _this.setState({
+	                draftItem: _this.state.draftItem.set('symbol', value)
+	            });
+	        };
+	        _this._onDraftQuantityChange = function (value) {
+	            _this.setState({
+	                draftItem: _this.state.draftItem.set('quantity', value)
+	            });
+	        };
+	        _this._onDraftBasisChange = function (value) {
+	            _this.setState({
+	                draftItem: _this.state.draftItem.set('basis', value)
+	            });
+	        };
+	        _this._onDraftSellPriceChange = function (value) {
+	            _this.setState({
+	                draftItem: _this.state.draftItem.set('sellPrice', value)
+	            });
+	        };
+	        _this._onDeleteDraft = function () {
+	            _this.setState({ draftItem: null });
+	        };
+	        return _this;
+	    }
+	    PFSoldStocks.prototype.render = function () {
+	        var _this = this;
+	        var header = React.createElement("div", { className: "pf-table-header" },
+	            React.createElement("div", { className: "pf-sold-header-symbol" }, "Symbol"),
+	            React.createElement("div", { className: "pf-sold-header-details" }, "Details"),
+	            React.createElement("div", { className: "pf-sold-header-gain" }, "Gain/Loss"),
+	            React.createElement("div", { className: "pf-sold-header-actions" }, "Actions"));
+	        var table = React.createElement("div", { className: "pf-table" }, Object.keys(this.props.quantityBySymbol).map(function (symbol) {
+	            return React.createElement(PFAggregatedSoldAssetRow_1.PFAggregatedSoldAssetRow, { key: symbol, symbolMetadata: _this.props.marketMetadata[symbol], transactions: _this.props.transactionsBySymbol.get(symbol), totalQuantity: _this.props.quantityBySymbol[symbol], totalBasis: _this.props.basisBySymbol[symbol], totalValue: _this.props.valueBySymbol[symbol] });
+	        }));
+	        var draftItem = null, addButton = null;
+	        if (this.state.draftItem) {
+	            draftItem = (React.createElement("div", { className: "pf-row" },
+	                React.createElement("input", { placeholder: "symbol", className: "pf-row-symbol", value: this.state.draftItem.symbol || '', onChange: function (event) { return _this._onDraftSymbolChange(event.target.value); } }),
+	                React.createElement("input", { placeholder: "quantity", className: "pf-row-quantity", value: this.state.draftItem.quantity, onChange: function (event) { return _this._onDraftQuantityChange(event.target.value); } }),
+	                React.createElement("input", { placeholder: "buying price", className: "pf-row-basis", value: this.state.draftItem.basis, onChange: function (event) { return _this._onDraftBasisChange(event.target.value); } }),
+	                React.createElement("input", { placeholder: "sell price", className: "pf-row-sell-price", value: this.state.draftItem.sellPrice, onChange: function (event) { return _this._onDraftSellPriceChange(event.target.value); } }),
+	                React.createElement("button", { onClick: this._onSaveClick }, "Save"),
+	                React.createElement("button", { onClick: this._onDeleteDraft }, "Delete")));
+	        }
+	        else {
+	            addButton = React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry");
+	        }
+	        return (React.createElement("div", { className: "pf-card" },
+	            header,
+	            table,
+	            draftItem,
+	            addButton));
+	    };
+	    return PFSoldStocks;
+	}(React.Component));
+	exports.PFSoldStocks = PFSoldStocks;
+
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 53 */,
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(47);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var util_1 = __webpack_require__(43);
+	var PFMarketNumber_1 = __webpack_require__(39);
+	var PFAggregatedSoldAssetRow = /** @class */ (function (_super) {
+	    __extends(PFAggregatedSoldAssetRow, _super);
+	    function PFAggregatedSoldAssetRow() {
+	        var _this = _super !== null && _super.apply(this, arguments) || this;
+	        _this.state = {
+	            expanded: false,
+	        };
+	        _this._onClick = function () {
+	            _this.setState({ expanded: !_this.state.expanded });
+	        };
+	        _this._onRowDeleteClick = function (event, symbol, index) {
+	            event.stopPropagation();
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.UNSOLD_DELETE_ROW,
+	                symbol: symbol,
+	                index: index,
+	            });
+	        };
+	        _this._onRowDeleteAllClick = function (event, symbol) {
+	            event.stopPropagation();
+	            PFDispatcher_1.PFDispatcher.dispatch({
+	                type: PFActionTypes_1.default.SOLD_DELETE_SYMBOL,
+	                symbol: symbol,
+	            });
+	        };
+	        return _this;
+	    }
+	    PFAggregatedSoldAssetRow.prototype.render = function () {
+	        var _this = this;
+	        // TODO: refactor the following code to use functions in the PFUnsoldAssetStore.
+	        var expanded = this.state.expanded;
+	        var symbol = this.props.transactions.get(0).symbol;
+	        var summaryRow = (React.createElement("div", { className: "pf-sold-symbol-summary", onClick: this._onClick },
+	            React.createElement("div", { className: "pf-sold-row-symbol" },
+	                React.createElement("div", null, symbol),
+	                React.createElement("div", { className: "pf-row-company-name" }, this.props.symbolMetadata && this.props.symbolMetadata.companyName)),
+	            React.createElement("div", { className: "pf-sold-row-details" },
+	                React.createElement("div", null,
+	                    "Invested ",
+	                    util_1.formatNum(this.props.totalQuantity))),
+	            React.createElement("div", { className: "pf-sold-row-gain" },
+	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.totalValue, previous: this.props.totalBasis })),
+	            React.createElement("div", { className: "pf-sold-row-actions" },
+	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
+	        return (React.createElement("div", { className: "pf-item", key: symbol },
+	            summaryRow,
+	            expanded ?
+	                React.createElement("div", { className: "pf-symbol-details" })
+	                : null));
+	    };
+	    return PFAggregatedSoldAssetRow;
+	}(React.Component));
+	exports.PFAggregatedSoldAssetRow = PFAggregatedSoldAssetRow;
+
+
+/***/ }),
+/* 55 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 56 */,
+/* 57 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 58 */,
+/* 59 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	var __assign = (this && this.__assign) || Object.assign || function(t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+	            t[p] = s[p];
+	    }
+	    return t;
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var utils_1 = __webpack_require__(9);
+	var React = __webpack_require__(6);
+	var PFMarketDataStore_1 = __webpack_require__(37);
+	var PFWatchlistStore_1 = __webpack_require__(36);
+	var PFWatchlist_1 = __webpack_require__(60);
+	var PFWatchlistContainer = /** @class */ (function (_super) {
+	    __extends(PFWatchlistContainer, _super);
+	    function PFWatchlistContainer() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFWatchlistContainer.getStores = function () {
+	        return [PFWatchlistStore_1.default, PFMarketDataStore_1.default];
+	    };
+	    PFWatchlistContainer.calculateState = function (prevState) {
+	        var marketData = PFMarketDataStore_1.default.getState().marketData;
+	        var symbols = PFWatchlistStore_1.default.getState().symbols;
+	        return {
+	            marketData: marketData,
+	            symbols: symbols,
+	        };
+	    };
+	    PFWatchlistContainer.prototype.render = function () {
+	        return React.createElement(PFWatchlist_1.PFWatchlist, __assign({}, this.state));
+	    };
+	    return PFWatchlistContainer;
+	}(React.PureComponent));
+	exports.default = utils_1.Container.create(PFWatchlistContainer);
+
+
+/***/ }),
+/* 60 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(40);
+	var PFMarketNumber_1 = __webpack_require__(39);
+	var PFDispatcher_1 = __webpack_require__(29);
+	var PFActionTypes_1 = __webpack_require__(32);
+	var PFWatchlist = /** @class */ (function (_super) {
+	    __extends(PFWatchlist, _super);
+	    function PFWatchlist() {
+	        var _this = _super !== null && _super.apply(this, arguments) || this;
+	        _this.state = {
+	            draft: null,
+	        };
+	        _this._onAddClick = function () {
+	            _this.setState({ draft: '' });
+	        };
+	        _this._onSaveClick = function () {
+	            if (_this.state.draft.match(/^[A-Za-z]+$/)) {
+	                PFDispatcher_1.PFDispatcher.dispatch({
+	                    type: PFActionTypes_1.default.WATCHLIST_ADD_ITEM,
+	                    symbol: _this.state.draft,
+	                });
+	                _this.setState({ draft: null });
+	            }
+	        };
+	        _this._onDeleteDraft = function () {
+	            _this.setState({ draft: null });
+	        };
+	        return _this;
+	    }
+	    PFWatchlist.prototype.render = function () {
+	        var _this = this;
+	        return (React.createElement("div", { className: "pf-card pf-watchlist" },
+	            React.createElement("div", { className: "pf-table-header" },
+	                React.createElement("div", null, "Symbol"),
+	                React.createElement("div", null, "Price")),
+	            React.createElement("div", { className: "pf-watchlist-rows" }, this.props.symbols.map(function (symbol) {
+	                var dataForSymbol = _this.props.marketData[symbol];
+	                var curPrice = dataForSymbol && dataForSymbol.latestPrice || null;
+	                var lastPrice = dataForSymbol && dataForSymbol.previousClose || null;
+	                return (React.createElement("div", { className: "pf-watchlist-row", key: symbol },
+	                    React.createElement("div", null, symbol),
+	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: curPrice, previous: lastPrice, showCurrentValue: true })));
+	            })),
+	            this.state.draft === null ?
+	                React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry") :
+	                React.createElement("div", { className: "pf-watchlist-input-row" },
+	                    React.createElement("input", { placeholder: "symbol", className: "pf-watchlist-symbol-input", value: this.state.draft || '', onChange: function (event) { return _this.setState({ draft: event.target.value }); } }),
+	                    React.createElement("button", { onClick: this._onSaveClick }, "Save"),
+	                    React.createElement("button", { onClick: this._onDeleteDraft }, "Delete"))));
+	    };
+	    return PFWatchlist;
+	}(React.Component));
+	exports.PFWatchlist = PFWatchlist;
 
 
 /***/ })
