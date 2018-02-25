@@ -11,7 +11,7 @@ body {
 .pf-summary {
   display: flex;
   justify-content: space-between;
-  font-size: 18px;
+  font-size: 16px;
 }
 .pf-summary .pf-summary-item-label {
   color: #1d2129;
@@ -43,7 +43,7 @@ body {
 .pf-header-avg-buy-price,
 .pf-symbol-detail-buy-price {
   text-align: right;
-  width: 130px;
+  width: 150px;
 }
 .pf-row-day-change,
 .pf-header-day-change,
@@ -60,7 +60,7 @@ body {
 .pf-row-actions,
 .pf-header-actions {
   text-align: right;
-  width: 100px;
+  width: 80px;
 }
 .pf-item {
   border-top: 1px solid #dfdfdf;
@@ -116,9 +116,10 @@ body {
 .pf-price {
   border-radius: 2px;
   color: white;
-  width: 56px;
+  width: 54px;
+  font-size: 12px;
   text-align: center;
-  padding: 4px 2px;
+  padding: 3px 0;
 }
 .pf-price.pf-price-green {
   background-color: #00cc00;
@@ -148,7 +149,7 @@ body {
 .pf-table-header {
   color: #1d2129;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   display: flex;
   margin-bottom: 8px;

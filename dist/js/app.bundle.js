@@ -7718,7 +7718,7 @@
 	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.marketFundValue, previous: this.props.marketFundCostBasis }),
 	                    React.createElement("div", { className: "pf-market-fund-value" },
 	                        "(",
-	                        this.props.marketFundValue === null ? '...' : util_1.formatNum(this.props.marketFundValue),
+	                        util_1.formatFloat(this.props.marketFundValue),
 	                        " asset value)")),
 	                React.createElement("div", { className: "pf-summary-realized" },
 	                    React.createElement("div", { className: "pf-summary-item-label" }, "Realized (G/L)"),
@@ -7844,19 +7844,17 @@
 
 	"use strict";
 	Object.defineProperty(exports, "__esModule", { value: true });
-	function formatNum(x) {
+	function formatInt(x) {
 	    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
-	exports.formatNum = formatNum;
-	function formatPercent(x, options) {
-	    if (options === void 0) { options = { needSign: true }; }
-	    var ans = formatNum(x.toFixed(2)) + '%';
-	    if (options.needSign && ans[0] !== '-') {
-	        ans = '+' + ans;
+	exports.formatInt = formatInt;
+	function formatFloat(x) {
+	    if (x === null) {
+	        return '...';
 	    }
-	    return ans;
+	    return x.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	}
-	exports.formatPercent = formatPercent;
+	exports.formatFloat = formatFloat;
 	function formatGainOrLoss(current, previous, options) {
 	    if (options === void 0) { options = {
 	        showCurrentValue: false,
@@ -7864,7 +7862,7 @@
 	    }; }
 	    var gain = current - previous;
 	    var value = options.showCurrentValue ? current : gain;
-	    var ans = formatNum(value.toFixed(2));
+	    var ans = formatFloat(value);
 	    if (!options.showCurrentValue && value > 1e-6 && ans[0] !== '-') {
 	        ans = '+' + ans;
 	    }
@@ -8131,7 +8129,7 @@
 	        var symbolTotalDayChange = symbolDayChange !== null && symbolDayChange * totalQuantity || null;
 	        var dayChangeText = '...';
 	        if (symbolTotalDayChange !== null) {
-	            dayChangeText = util_1.formatNum(symbolTotalDayChange.toFixed(2));
+	            dayChangeText = util_1.formatInt(symbolTotalDayChange.toFixed(2));
 	            if (dayChangeText[0] !== '-') {
 	                dayChangeText = '+' + dayChangeText;
 	            }
@@ -8159,10 +8157,10 @@
 	                React.createElement("div", { className: "pf-row-price-tag" },
 	                    React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode }))),
 	            React.createElement("div", { className: "pf-row-avg-buy-price" },
-	                React.createElement("div", null, util_1.formatNum(avgPrice.toFixed(2))),
+	                React.createElement("div", null, util_1.formatInt(avgPrice.toFixed(2))),
 	                React.createElement("div", { className: "pf-row-quantity" },
 	                    "(",
-	                    util_1.formatNum(totalQuantity),
+	                    util_1.formatInt(totalQuantity),
 	                    " stocks)")),
 	            React.createElement("div", { className: classNames({
 	                    'pf-row-day-change': true,
@@ -8174,7 +8172,7 @@
 	                    'pf-color-red': curPrice !== null && totalValue < totalBasis,
 	                    'pf-color-green': curPrice !== null && totalValue > totalBasis
 	                }) },
-	                totalValue === null ? '...' : util_1.formatNum((totalValue - totalBasis).toFixed(2)),
+	                totalValue === null ? '...' : util_1.formatInt((totalValue - totalBasis).toFixed(2)),
 	                " ",
 	                overallGainPercentText),
 	            React.createElement("div", { className: "pf-row-actions" },
@@ -8183,23 +8181,23 @@
 	            summaryRow,
 	            expanded ?
 	                React.createElement("div", { className: "pf-symbol-details" }, this.props.transactions.map(function (row, index) {
-	                    var overallGainText = curPrice ? util_1.formatNum(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
+	                    var overallGainText = curPrice ? util_1.formatInt(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
 	                    var overallGainPercent = curPrice ? ((curPrice - row.basis) / row.basis * 100).toFixed(2) + '%' : '';
 	                    if (overallGainPercent) {
 	                        overallGainPercent = '(' + overallGainPercent + ')';
 	                    }
 	                    return (React.createElement("div", { className: "pf-symbol-detail-row", key: index },
 	                        React.createElement("div", { className: "pf-symbol-detail-buy-price" },
-	                            util_1.formatNum(row.quantity),
+	                            util_1.formatInt(row.quantity),
 	                            " stocks @ ",
-	                            util_1.formatNum(row.basis.toFixed(2))),
+	                            util_1.formatInt(row.basis.toFixed(2))),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-symbol-detail-day-change': true,
 	                                'pf-color-red': hasDayLoss,
 	                                'pf-color-green': hasDayProfit
 	                            }) }, symbolDayChange === null
 	                            ? '...'
-	                            : util_1.formatNum((symbolDayChange * row.quantity).toFixed(2))),
+	                            : util_1.formatInt((symbolDayChange * row.quantity).toFixed(2))),
 	                        React.createElement("div", { className: classNames({
 	                                'pf-symbol-detail-overall-gain': true,
 	                                'pf-color-red': curPrice !== null && curPrice - row.basis < 1e-6,
@@ -8270,7 +8268,7 @@
 	        var priceDecreased = !priceNeutral && curPrice < lastClose;
 	        var priceDisplay = '...';
 	        if (curPrice !== null && this.props.priceDisplayMode === types_1.PriceDisplayMode.ABSOLUTE_CHANGE) {
-	            priceDisplay = util_1.formatNum((curPrice - lastClose).toFixed(2));
+	            priceDisplay = util_1.formatInt((curPrice - lastClose).toFixed(2));
 	            if (priceNeutral || priceIncreased) {
 	                priceDisplay = '+' + priceDisplay;
 	            }
@@ -8534,7 +8532,7 @@
 	            React.createElement("div", { className: "pf-sold-row-details" },
 	                React.createElement("div", null,
 	                    "Invested ",
-	                    util_1.formatNum(this.props.totalQuantity))),
+	                    util_1.formatFloat(this.props.totalBasis))),
 	            React.createElement("div", { className: "pf-sold-row-gain" },
 	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: this.props.totalValue, previous: this.props.totalBasis })),
 	            React.createElement("div", { className: "pf-sold-row-actions" },
