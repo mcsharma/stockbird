@@ -14,6 +14,9 @@ type Props = {
 export class PFMarketNumber extends React.Component<Props> {
 
   render() {
+    if (this.props.current === null || this.props.previous === null) {
+      return <div className="pf-market-num">...</div>;
+    }
     let isProfit = this.props.current - this.props.previous > 1e-6;
     const isLoss = this.props.current - this.props.previous < -1e-6;
     if (!isProfit && !isLoss && this.props.showGreenOnNeutral === true) {
@@ -21,7 +24,7 @@ export class PFMarketNumber extends React.Component<Props> {
     }
     return (
       <div
-        className={classNames({'pf-color-red': isLoss, 'pf-color-green': isProfit})}>
+        className={classNames({'pf-market-num': true, 'pf-color-red': isLoss, 'pf-color-green': isProfit})}>
         {formatGainOrLoss(this.props.current, this.props.previous, {
           showPercent: this.props.showPercent !== false,
           showCurrentValue: this.props.showCurrentValue

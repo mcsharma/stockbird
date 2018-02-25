@@ -4,7 +4,7 @@ import {PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
 import '../../css/pf-aggregated-row.less';
 
 import classNames = require('classnames');
-import {format} from '../util';
+import {formatNum} from '../util';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
 
@@ -34,8 +34,11 @@ export class PFStockPriceTag extends React.Component<Props, State> {
     const priceDecreased = !priceNeutral && curPrice < lastClose;
 
     let priceDisplay = '...';
-    if (curPrice !== null && this.props.priceDisplayMode === PriceDisplayMode.PER_SHARE_PRICE) {
-      priceDisplay = format(curPrice.toFixed(2));
+    if (curPrice !== null && this.props.priceDisplayMode === PriceDisplayMode.ABSOLUTE_CHANGE) {
+      priceDisplay = formatNum((curPrice - lastClose).toFixed(2));
+      if (priceNeutral || priceIncreased) {
+        priceDisplay = '+' + priceDisplay;
+      }
     } else if (curPrice !== null && lastClose !== null && this.props.priceDisplayMode === PriceDisplayMode.PERCENT_CHANGE) {
       let percentChange = curPrice && lastClose &&
         ((curPrice - lastClose) * 100 / lastClose).toFixed(2) || null;

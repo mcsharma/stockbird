@@ -9,60 +9,25 @@ body {
   font-family: sans-serif;
 }
 .pf-summary {
-  border: 1px solid #e0e0e0;
-  box-shadow: #d4d4d4 10px 0 50px 0;
-  background-color: white;
-  border-radius: 4px;
-  height: 60px;
-  padding: 20px;
   display: flex;
-  font-size: 18px;
   justify-content: space-between;
+  font-size: 18px;
 }
 .pf-summary .pf-summary-item-label {
+  color: #1d2129;
   font-weight: bold;
+  font-size: 16px;
   margin-bottom: 12px;
 }
-.pf-root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.pf-root .pf-chrome {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 40px;
-  width: 100%;
-  background-color: #7e42f1;
-}
-.pf-root .pf-body {
-  width: 800px;
-  display: flex;
-  align-items: stretch;
-  flex-direction: column;
-}
-.pf-root .pf-body .pf-main-item-label {
-  margin-bottom: 4px;
-}
-.pf-unsold-card {
-  border: 1px solid #dddfe2;
-  background-color: white;
-  border-radius: 4px;
-  min-height: 160px;
-  padding: 20px;
-  font-size: 13px;
-  box-shadow: #d4d4d4 10px 0 50px 0;
-}
-.pf-unsold-card .pf-table-header {
-  text-align: center;
+.pf-summary .pf-summary-unrealized .pf-market-fund-value {
+  margin-top: 4px;
   font-size: 14px;
-  font-weight: bold;
-  display: flex;
-  margin-bottom: 8px;
+  color: #939a9e;
 }
-.pf-unsold-card .pf-table {
-  display: flex;
-  flex-direction: column;
+.pf-summary .pf-summary-realized,
+.pf-summary .pf-summary-unrealized,
+.pf-summary .pf-summary-overall {
+  text-align: right;
 }
 .pf-row-symbol,
 .pf-header-symbol {
@@ -71,13 +36,13 @@ body {
 }
 .pf-row-price,
 .pf-header-price {
-  text-align: left;
+  text-align: right;
   width: 130px;
 }
 .pf-row-avg-buy-price,
 .pf-header-avg-buy-price,
 .pf-symbol-detail-buy-price {
-  text-align: left;
+  text-align: right;
   width: 130px;
 }
 .pf-row-day-change,
@@ -100,7 +65,7 @@ body {
 .pf-item {
   border-top: 1px solid #dfdfdf;
 }
-.pf-symbol-summary {
+.pf-unsold-symbol-summary {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -108,10 +73,10 @@ body {
   height: 46px;
   cursor: pointer;
 }
-.pf-symbol-summary:not(:first-child) {
+.pf-unsold-symbol-summary:not(:first-child) {
   margin-top: 4px;
 }
-.pf-symbol-summary:hover {
+.pf-unsold-symbol-summary:hover {
   background-color: #fafafa;
 }
 .pf-symbol-details {
@@ -133,7 +98,15 @@ body {
 }
 .pf-row-price {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  align-items: center;
+}
+.pf-row-price .pf-row-price-absolute {
+  width: 54px;
+  text-align: right;
+}
+.pf-row-price .pf-row-price-tag {
+  margin-left: 4px;
 }
 .pf-row-avg-buy-price .pf-row-quantity {
   margin-top: 2px;
@@ -145,7 +118,7 @@ body {
   color: white;
   width: 56px;
   text-align: center;
-  padding: 4px 4px;
+  padding: 4px 2px;
 }
 .pf-price.pf-price-green {
   background-color: #00cc00;
@@ -162,6 +135,119 @@ body {
 }
 .pf-color-green {
   color: #00b500;
+}
+.pf-card {
+  border: 1px solid #dddfe2;
+  background-color: white;
+  border-radius: 4px;
+  min-height: 88px;
+  padding: 20px;
+  font-size: 13px;
+  box-shadow: #d4d4d4 10px 0 50px 0;
+}
+.pf-table-header {
+  color: #1d2129;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  margin-bottom: 8px;
+}
+.pf-table {
+  display: flex;
+  flex-direction: column;
+}
+.pf-watchlist .pf-table-header {
+  justify-content: space-between;
+  border-bottom: 1px solid #dfdfdf;
+  padding-bottom: 8px;
+}
+.pf-watchlist .pf-watchlist-rows {
+  display: flex;
+  flex-direction: column;
+}
+.pf-watchlist .pf-watchlist-input-row {
+  display: flex;
+  margin-top: 16px;
+}
+.pf-watchlist .pf-watchlist-input-row .pf-watchlist-symbol-input {
+  width: 60px;
+}
+.pf-watchlist .pf-watchlist-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.pf-watchlist .pf-watchlist-row:not(:first-child) {
+  margin-top: 8px;
+}
+.pf-watchlist .pf-watchlist-row:not(:last-child) {
+  padding-bottom: 4px;
+}
+.pf-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pf-root .pf-chrome {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 40px;
+  width: 100%;
+  background-color: #7e42f1;
+}
+.pf-root .pf-body {
+  width: 1000px;
+  display: flex;
+  flex-direction: row;
+}
+.pf-root .pf-body .pf-left-col {
+  width: 76%;
+}
+.pf-root .pf-body .pf-right-col {
+  margin-left: 4%;
+  width: 20%;
+}
+.pf-root .pf-body .pf-main-item-label {
+  margin-bottom: 4px;
+}
+.pf-sold-symbol-summary {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: center;
+  height: 46px;
+  cursor: pointer;
+}
+.pf-sold-symbol-summary:not(:first-child) {
+  margin-top: 4px;
+}
+.pf-sold-symbol-summary:hover {
+  background-color: #fafafa;
+}
+.pf-sold-header-symbol,
+.pf-sold-row-symbol {
+  text-align: left;
+  width: 120px;
+}
+.pf-sold-header-details,
+.pf-sold-row-details {
+  text-align: left;
+  width: 250px;
+}
+.pf-sold-header-gain,
+.pf-sold-row-gain {
+  text-align: right;
+  width: 250px;
+}
+.pf-sold-header-actions,
+.pf-sold-row-actions {
+  text-align: right;
+  width: 140px;
+}
+.pf-sold-row-symbol .pf-row-company-name {
+  font-size: 12px;
+  color: #939a9e;
 }
 
 /*# sourceMappingURL=bundle.css.map*/

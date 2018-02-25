@@ -1,6 +1,6 @@
 import {Container} from 'flux/utils';
 import React = require('react');
-import PFUnsoldAssetsStore from '../stores/PFUnsoldAssetsStore';
+import PFUnsoldAssetsStore from '../stores/PFAssetsStore';
 import {PFSummary} from '../components/PFSummary';
 import PFMarketDataStore from '../stores/PFMarketDataStore';
 import {PFTradeItem} from '../types/pf-trade-items';
@@ -8,14 +8,12 @@ import {List, OrderedMap} from 'immutable';
 import {PFSymbol, PFSymbolToStockDataPoint} from '../types/types';
 
 type State = {
-  assets: OrderedMap<PFSymbol, List<PFTradeItem>>,
   marketData: PFSymbolToStockDataPoint,
-  dayChange: number | null,
-  dayChangePercent: number | null,
-  overallGain: number|null,
-  overallGainPercent: number|null,
-  totalValue: number| null,
-  totalBasis: number|null,
+  marketFundCostBasis: number,
+  marketFundValue: number | null,
+  marketFundPreviousCloseValue: number | null,
+  soldFundCostBasis: number,
+  soldFundValue: number,
 };
 
 class PFSummaryContainer extends React.PureComponent<{}, State> {
@@ -25,18 +23,17 @@ class PFSummaryContainer extends React.PureComponent<{}, State> {
   }
 
   static calculateState(prevState: State): State {
-    const assets = PFUnsoldAssetsStore.getState().get('assets');
-    const marketDataState = PFMarketDataStore.getState();
-    const {dayChange, totalValue, totalBasis} = PFUnsoldAssetsStore.getTotalValueAndBasisAndDayChange();
+    const {marketData} = PFMarketDataStore.getState();
+    const {marketFundPreviousCloseValue, marketFundValue, marketFundCostBasis} = PFUnsoldAssetsStore.getDetailsForUnsoldSymbols();
+    const {soldFundCostBasis, soldFundValue} = PFUnsoldAssetsStore.getSummaryForSoldSymbols();
+
     return {
-      assets,
-      marketData: marketDataState.marketData,
-      dayChange,
-      dayChangePercent: PFUnsoldAssetsStore.getDayChangePercent(),
-      overallGain: PFUnsoldAssetsStore.getOverallGain(),
-      overallGainPercent: PFUnsoldAssetsStore.getOverallGainPercent(),
-      totalValue,
-      totalBasis,
+      marketData,
+      marketFundCostBasis,
+      marketFundValue,
+      marketFundPreviousCloseValue,
+      soldFundCostBasis,
+      soldFundValue,
     };
   }
 

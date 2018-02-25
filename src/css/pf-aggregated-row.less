@@ -4,12 +4,12 @@
 }
 
 .pf-row-price, .pf-header-price {
-  text-align: left;
+  text-align: right;
   width: 130px;
 }
 
 .pf-row-avg-buy-price, .pf-header-avg-buy-price, .pf-symbol-detail-buy-price {
-  text-align: left;
+  text-align: right;
   width: 130px;
 }
 
@@ -32,7 +32,7 @@
   border-top: 1px solid #dfdfdf;
 }
 
-.pf-symbol-summary {
+.pf-unsold-symbol-summary {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -70,7 +70,16 @@
 
 .pf-row-price {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  align-items: center;
+  .pf-row-price-absolute {
+    width: 54px;
+    text-align: right;
+  }
+  .pf-row-price-tag {
+    margin-left: 4px;
+  }
+
 }
 
 .pf-row-avg-buy-price {
@@ -86,7 +95,7 @@
   color: white;
   width: 56px;
   text-align: center;
-  padding: 4px 4px;
+  padding: 4px 2px;
   &.pf-price-green {
     background-color: #00cc00;
   }

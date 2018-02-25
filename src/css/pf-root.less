@@ -10,10 +10,16 @@
     background-color: #7e42f1;
   }
   .pf-body {
-    width: 800px;
+    width: 1000px;
     display: flex;
-    align-items: stretch;
-    flex-direction: column;
+    .pf-left-col {
+      width: 76%;
+    }
+    .pf-right-col {
+      margin-left: 4%;
+      width: 20%;
+    }
+    flex-direction: row;
     .pf-main-item-label {
       margin-bottom: 4px;
     }

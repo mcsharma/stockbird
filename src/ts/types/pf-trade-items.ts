@@ -1,6 +1,7 @@
 import {Record} from 'immutable';
 
 const DEFAULT_VALUES = {
+  tid: 0,
   symbol: '',
   buyDate: null,
   basis: 0,
@@ -10,6 +11,7 @@ const DEFAULT_VALUES = {
 };
 
 export class PFTradeItem extends Record(DEFAULT_VALUES) {
+  tid: number;
   symbol: string;
   basis: number;
   sellPrice: number|null;

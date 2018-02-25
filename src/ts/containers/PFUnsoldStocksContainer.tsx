@@ -1,31 +1,33 @@
 import {Container} from 'flux/utils';
 import React = require('react');
-import PFUnsoldAssetsStore from '../stores/PFUnsoldAssetsStore';
+import PFAssetsStore from '../stores/PFAssetsStore';
 import {PFUnsoldStocks} from '../components/PFUnsoldStocks';
 import {PFTradeDraftItem, PFTradeItem} from '../types/pf-trade-items';
 import MarketDataStore from '../stores/PFMarketDataStore';
-import {PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
+import {PFSymbolToMetadata, PFSymbolToStockDataPoint, PriceDisplayMode} from '../types/types';
 
 type State = {
   assets: PFTradeItem[][],
   draftItem?: PFTradeDraftItem,
   marketData: PFSymbolToStockDataPoint,
+  marketMetadata: PFSymbolToMetadata,
   priceDisplayMode: PriceDisplayMode,
 };
 
 class PFUnsoldStocksContainer extends React.PureComponent<{}, State> {
 
   static getStores() {
-    return [PFUnsoldAssetsStore, MarketDataStore];
+    return [PFAssetsStore, MarketDataStore];
   }
 
   static calculateState(prevState: State): State {
-    const state = PFUnsoldAssetsStore.getState();
+    const state = PFAssetsStore.getState();
     const marketState = MarketDataStore.getState();
     return {
       assets: state.get('assets').toArray().map(item => item.toArray()),
       draftItem: state.get('draftItem'),
       marketData: marketState.marketData,
+      marketMetadata: marketState.marketMetadata,
       priceDisplayMode: state.priceDisplayMode,
     }
   }

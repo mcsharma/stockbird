@@ -1,10 +1,20 @@
-import {StockDataPoint} from '../stock-data-fetch';
-
 export type PFSymbol = string;
 
 export type PFSymbolToStockDataPoint = { [symbol: string]: StockDataPoint };
 
+export type PFSymbolToMetadata = {[symbol: string]: PFSymbolMetadata};
+
+export type StockDataPoint = {
+  latestPrice: number,
+  previousClose: number,
+  companyName: string,
+};
+
+export type PFSymbolMetadata = {
+  companyName: string,
+}
+
 export enum PriceDisplayMode {
-  PER_SHARE_PRICE,
+  ABSOLUTE_CHANGE,
   PERCENT_CHANGE,
 }
