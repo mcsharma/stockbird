@@ -7,7 +7,6 @@ export type PFSymbolToMetadata = {[symbol: string]: PFSymbolMetadata};
 export type StockDataPoint = {
   latestPrice: number,
   previousClose: number,
-  companyName: string,
 };
 
 export type PFSymbolMetadata = {

@@ -5,6 +5,8 @@ import {List} from 'immutable';
 import {PFMarketNumber} from './PFMarketNumber';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
+import {PFInput} from './PFInput';
+import {PFButton} from './PFButton';
 
 type Props = {
   marketData: PFSymbolToStockDataPoint,
@@ -58,15 +60,17 @@ export class PFWatchlist extends React.Component<Props, State> {
             );
           })}
         </div>
-        {this.state.draft === null ?
-          <button style={{marginTop: '16px'}} onClick={this._onAddClick}>Add Entry</button> :
+        <div style={{marginTop: 12}}>{this.state.draft === null ?
+          <PFButton size="small" type="primary" onClick={this._onAddClick} label={'Add Entry'}/> :
           <div className="pf-watchlist-input-row">
-            <input placeholder="symbol" className="pf-watchlist-symbol-input" value={this.state.draft || ''}
-                   onChange={(event) => this.setState({draft: event.target.value})}/>
-            <button onClick={this._onSaveClick}>Save</button>
-            <button onClick={this._onDeleteDraft}>Delete</button>
+            <PFInput size="small" placeholder="Symbol" width={60} value={this.state.draft || ''}
+                     onChange={(value) => this.setState({draft: value})}/>
+            <div>
+              <PFButton type="primary" size="small" onClick={this._onSaveClick} label={'Save'}></PFButton>
+              <PFButton size="small" onClick={this._onDeleteDraft} label={'Cancel'}></PFButton>
+            </div>
           </div>
-        }
+        }</div>
       </div>
     );
   }

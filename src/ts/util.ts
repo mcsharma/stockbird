@@ -1,3 +1,6 @@
+import {PFTradeItem} from './types/pf-trade-items';
+import {StockDataPoint} from './types/types';
+
 export function formatInt(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
@@ -6,7 +9,7 @@ export function formatFloat(x): string {
   if (x === null) {
     return '...';
   }
-  return x.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return formatInt(x.toFixed(2));
 }
 
 export function formatGainOrLoss(current: number, previous: number, options: any = {
@@ -26,5 +29,27 @@ export function formatGainOrLoss(current: number, previous: number, options: any
     }
     ans += (gain / previous * 100).toFixed(2) + '%)';
   }
+  return ans;
+}
+
+export function getNetAssetValue(transactions: PFTradeItem[], marketData?: StockDataPoint) {
+  let ans = 0;
+  if (!marketData) {
+    return ans;
+  }
+  transactions.forEach((transaction) => {
+    ans += transaction.quantity * marketData.latestPrice;
+  });
+  return ans;
+}
+
+export function getNetAssetPrevCloseValue(transactions: PFTradeItem[], marketData?: StockDataPoint) {
+  let ans = 0;
+  if (!marketData) {
+    return ans;
+  }
+  transactions.forEach((transaction) => {
+    ans += transaction.quantity * marketData.previousClose;
+  });
   return ans;
 }

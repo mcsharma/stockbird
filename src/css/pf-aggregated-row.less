@@ -1,6 +1,6 @@
 .pf-row-symbol, .pf-header-symbol {
   text-align: left;
-  width: 120px;
+  width: 100px;
 }
 
 .pf-row-price, .pf-header-price {
@@ -8,17 +8,17 @@
   width: 130px;
 }
 
-.pf-row-avg-buy-price, .pf-header-avg-buy-price, .pf-symbol-detail-buy-price {
-  text-align: right;
-  width: 160px;
-}
-
 .pf-row-day-change, .pf-header-day-change, .pf-symbol-detail-day-change {
   text-align: right;
-  width: 110px;
+  width: 100px;
 }
 
-.pf-row-overall-change, .pf-header-overall-change, .pf-symbol-detail-overall-gain {
+.pf-row-avg-buy-price, .pf-header-avg-buy-price, .pf-symbol-detail-buy-price, .pf-symbol-details-header-buy {
+  text-align: right;
+  width: 140px;
+}
+
+.pf-row-symbol-net-value, .pf-header-overall-change, .pf-symbol-detail-overall-gain, .pf-symbol-details-header-gain {
   text-align: right;
   width: 160px;
 }
@@ -49,12 +49,18 @@
 
 .pf-symbol-details {
   margin-top: 4px;
-  margin-left: 240px; // sum of width pf-row-symbol and pf-row-price
+  .pf-symbol-details-header {
+    color: #1d2129;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 330px;
+    display: flex;
+  }
   .pf-symbol-detail-row {
     height: 28px;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    margin-left: 330px;
     &:hover {
       background-color: #fafafa;
     }

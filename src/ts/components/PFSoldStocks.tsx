@@ -6,6 +6,9 @@ import PFActionTypes from '../types/PFActionTypes';
 import {PFSymbol, PFSymbolToMetadata} from '../types/types';
 import {List, OrderedMap} from 'immutable';
 import {PFAggregatedSoldAssetRow} from './PFAggregatedSoldAssetRow';
+import {PFButton} from './PFButton';
+import {PFInput} from './PFInput';
+import {PFText} from './PFText';
 
 type Props = {
   quantityBySymbol: { [symbol: string]: number },
@@ -109,29 +112,35 @@ export class PFSoldStocks extends React.Component<Props, State> {
         />
       )}</div>;
 
-    let draftItem = null, addButton = null;
+    let footer = null;
     if (this.state.draftItem) {
-      draftItem = (<div className="pf-row">
-        <input placeholder="symbol" className="pf-row-symbol" value={this.state.draftItem.symbol || ''}
-               onChange={(event) => this._onDraftSymbolChange(event.target.value)}/>
-        <input placeholder="quantity" className="pf-row-quantity" value={this.state.draftItem.quantity}
-               onChange={(event) => this._onDraftQuantityChange(event.target.value)}/>
-        <input placeholder="buying price" className="pf-row-basis" value={this.state.draftItem.basis}
-               onChange={(event) => this._onDraftBasisChange(event.target.value)}/>
-        <input placeholder="sell price" className="pf-row-sell-price" value={this.state.draftItem.sellPrice}
-               onChange={(event) => this._onDraftSellPriceChange(event.target.value)}/>
-        <button onClick={this._onSaveClick}>Save</button>
-        <button onClick={this._onDeleteDraft}>Delete</button>
-      </div>);
+      footer = (
+        <div>
+          <PFText weight={'bold'} size={14} color={'heading'}>Add Transaction</PFText>
+          <div className={'pf-sold-draft-row'}>
+            <div className={'pf-sold-draft-row-inputs'}>
+              <PFInput placeholder="symbol" value={this.state.draftItem.symbol || ''}
+                       onChange={(value) => this._onDraftSymbolChange(value)}/>
+              <PFInput placeholder="quantity" value={this.state.draftItem.quantity}
+                       onChange={(value) => this._onDraftQuantityChange(value)}/>
+              <PFInput placeholder="buying price" value={this.state.draftItem.basis}
+                       onChange={(value) => this._onDraftBasisChange(value)}/>
+              <PFInput placeholder="sell price" value={this.state.draftItem.sellPrice}
+                       onChange={(value) => this._onDraftSellPriceChange(value)}/>
+            </div>
+            <div><PFButton type="primary" onClick={this._onSaveClick} label={'Save'}/>
+              <PFButton onClick={this._onDeleteDraft} label={'Delete'}/>
+            </div>
+          </div>
+        </div>);
     } else {
-      addButton = <button style={{marginTop: '16px'}} onClick={this._onAddClick}>Add Entry</button>;
+      footer = <PFButton type="primary" onClick={this._onAddClick} label={'Add Entry'}/>;
     }
 
     return (<div className="pf-card">
       {header}
       {table}
-      {draftItem}
-      {addButton}
+      <div className="margin-top-20">{footer}</div>
     </div>);
   }
 }
