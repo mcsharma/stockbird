@@ -13,7 +13,6 @@ export function fetchAndUpdateStockData(symbols: string[] = []) {
     .toArray();
   console.log(symbols);
   return fetchStockData(allSymbols as string[]).then(result => {
-    console.log(result);
     PFDispatcher.dispatch({
       type: PFActionTypes.MARKET_DATA_UPDATE,
       result,

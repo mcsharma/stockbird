@@ -114,12 +114,17 @@
 	var PFSummaryContainer_1 = __webpack_require__(8);
 	var PFUnsoldStocksContainer_1 = __webpack_require__(44);
 	var stock_data_fetch_1 = __webpack_require__(35);
-	var PFSoldStocksContainer_1 = __webpack_require__(50);
+	var PFSoldStocksContainer_1 = __webpack_require__(53);
+	__webpack_require__(58);
 	__webpack_require__(55);
-	__webpack_require__(52);
-	__webpack_require__(57);
+	__webpack_require__(60);
+	__webpack_require__(62);
 	__webpack_require__(40);
-	var PFWatchlistContainer_1 = __webpack_require__(59);
+	__webpack_require__(64);
+	__webpack_require__(66);
+	__webpack_require__(68);
+	__webpack_require__(70);
+	var PFWatchlistContainer_1 = __webpack_require__(72);
 	var PFRoot = /** @class */ (function (_super) {
 	    __extends(PFRoot, _super);
 	    function PFRoot(props) {
@@ -7516,7 +7521,9 @@
 	        .concat(PFWatchlistStore_1.default.getState().symbols)
 	        .concat(symbols)
 	        .toArray();
+	    console.log(symbols);
 	    return fetchStockData(allSymbols).then(function (result) {
+	        console.log(result);
 	        PFDispatcher_1.PFDispatcher.dispatch({
 	            type: PFActionTypes_1.default.MARKET_DATA_UPDATE,
 	            result: result,
@@ -7537,6 +7544,47 @@
 	    if (symbols.length === 0) {
 	        return Promise.resolve(result);
 	    }
+	    // return Promise.resolve({
+	    //   data: {
+	    //     FB: {
+	    //       latestPrice: 172.34,
+	    //       previousClose: 174.03,
+	    //     },
+	    //     GOOG: {
+	    //       latestPrice: 1023.56,
+	    //       previousClose: 1024.20,
+	    //     },
+	    //     AMZN: {
+	    //       latestPrice: 1582,
+	    //       previousClose: 1573,
+	    //     },
+	    //     AAPL: {
+	    //       latestPrice: 172.34,
+	    //       previousClose: 171,
+	    //     },
+	    //     NFLX: {
+	    //       latestPrice: 313,
+	    //       previousClose: 311,
+	    //     },
+	    //   },
+	    //   metadata: {
+	    //     FB: {
+	    //       companyName: 'Facebook Inc.'
+	    //     },
+	    //     GOOG: {
+	    //       companyName: 'Alphabet Inc.'
+	    //     },
+	    //     AMZN: {
+	    //       companyName: 'Amazon Inc.'
+	    //     },
+	    //     AAPL: {
+	    //       companyName: 'Apple Inc.'
+	    //     },
+	    //     NFLX: {
+	    //       companyName: 'Netflix Inc.'
+	    //     }
+	    //   }
+	    // });
 	    return new Promise(function (resolve, reject) {
 	        var url = 'https://api.iextrading.com/1.0/stock/market/batch?symbols=' + symbols.join(',') + '&types=quote';
 	        httpGetAsync(url, function (response) {
@@ -7759,6 +7807,9 @@
 	        return _super !== null && _super.apply(this, arguments) || this;
 	    }
 	    PFMarketNumber.prototype.render = function () {
+	        if (this.props.isQuantity === true) {
+	            React.createElement("div", { className: "pf-market-num" }, util_1.formatInt(this.props.current));
+	        }
 	        if (this.props.current === null || this.props.previous === null) {
 	            return React.createElement("div", { className: "pf-market-num" }, "...");
 	        }
@@ -7852,7 +7903,7 @@
 	    if (x === null) {
 	        return '...';
 	    }
-	    return x.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+	    return formatInt(x.toFixed(2));
 	}
 	exports.formatFloat = formatFloat;
 	function formatGainOrLoss(current, previous, options) {
@@ -7876,6 +7927,28 @@
 	    return ans;
 	}
 	exports.formatGainOrLoss = formatGainOrLoss;
+	function getNetAssetValue(transactions, marketData) {
+	    var ans = 0;
+	    if (!marketData) {
+	        return ans;
+	    }
+	    transactions.forEach(function (transaction) {
+	        ans += transaction.quantity * marketData.latestPrice;
+	    });
+	    return ans;
+	}
+	exports.getNetAssetValue = getNetAssetValue;
+	function getNetAssetPrevCloseValue(transactions, marketData) {
+	    var ans = 0;
+	    if (!marketData) {
+	        return ans;
+	    }
+	    transactions.forEach(function (transaction) {
+	        ans += transaction.quantity * marketData.previousClose;
+	    });
+	    return ans;
+	}
+	exports.getNetAssetPrevCloseValue = getNetAssetPrevCloseValue;
 
 
 /***/ }),
@@ -7954,6 +8027,9 @@
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
 	var PFAggregatedAssetRow_1 = __webpack_require__(46);
+	var PFButton_1 = __webpack_require__(50);
+	var PFInput_1 = __webpack_require__(51);
+	var PFText_1 = __webpack_require__(52);
 	var PFUnsoldStocks = /** @class */ (function (_super) {
 	    __extends(PFUnsoldStocks, _super);
 	    function PFUnsoldStocks() {
@@ -8021,9 +8097,9 @@
 	        var header = React.createElement("div", { className: "pf-table-header" },
 	            React.createElement("div", { className: "pf-header-symbol" }, "Symbol"),
 	            React.createElement("div", { className: "pf-header-price" }, "Current Price"),
-	            React.createElement("div", { className: "pf-header-avg-buy-price" }, "Avg Buy Price"),
 	            React.createElement("div", { className: "pf-header-day-change" }, "Day Change"),
-	            React.createElement("div", { className: "pf-header-overall-change" }, "Overall G/L"),
+	            React.createElement("div", { className: "pf-header-avg-buy-price" }, "Avg Buy Price"),
+	            React.createElement("div", { className: "pf-header-overall-change" }, "Current Value"),
 	            React.createElement("div", { className: "pf-header-actions" }, "Actions"));
 	        var table = React.createElement("div", { className: "pf-table" }, this.props.assets.map(function (assetRows) {
 	            if (assetRows.length === 0) {
@@ -8035,23 +8111,27 @@
 	            }
 	            return (React.createElement(PFAggregatedAssetRow_1.PFAggregatedAssetRow, { key: assetRows[0].symbol, transactions: unsoldTransactions, marketData: _this.props.marketData, marketMetadata: _this.props.marketMetadata, priceDisplayMode: _this.props.priceDisplayMode }));
 	        }));
-	        var draftItem = null, addButton = null;
+	        var footer = null;
 	        if (this.props.draftItem) {
-	            draftItem = (React.createElement("div", { className: "pf-row" },
-	                React.createElement("input", { placeholder: "symbol", className: "pf-row-symbol", value: this.props.draftItem.symbol || '', onChange: function (event) { return _this._onDraftSymbolChange(event.target.value); } }),
-	                React.createElement("input", { placeholder: "quantity", className: "pf-row-quantity", value: this.props.draftItem.quantity, onChange: function (event) { return _this._onDraftQuantityChange(event.target.value); } }),
-	                React.createElement("input", { placeholder: "buying price", className: "pf-row-basis", value: this.props.draftItem.basis, onChange: function (event) { return _this._onDraftBasisChange(event.target.value); } }),
-	                React.createElement("button", { onClick: this._onSaveClick }, "Save"),
-	                React.createElement("button", { onClick: this._onDeleteDraft }, "Delete")));
+	            footer = (React.createElement("div", null,
+	                React.createElement(PFText_1.PFText, { weight: 'bold', size: 14, color: 'heading' }, "Add Transaction"),
+	                React.createElement("div", { className: 'pf-row pf-unsold-draft-row' },
+	                    React.createElement("div", { className: 'pf-unsold-draft-row-inputs' },
+	                        React.createElement(PFInput_1.PFInput, { placeholder: 'symbol', value: this.props.draftItem.symbol, onChange: this._onDraftSymbolChange }),
+	                        React.createElement(PFInput_1.PFInput, { placeholder: 'quantity', value: this.props.draftItem.quantity, onChange: this._onDraftQuantityChange }),
+	                        React.createElement(PFInput_1.PFInput, { placeholder: 'buying price', value: this.props.draftItem.basis, onChange: this._onDraftBasisChange })),
+	                    React.createElement("div", { style: { display: 'flex' } },
+	                        React.createElement(PFButton_1.PFButton, { type: "primary", onClick: this._onSaveClick, label: 'Save' }),
+	                        React.createElement("div", { className: 'margin-left-8' },
+	                            React.createElement(PFButton_1.PFButton, { onClick: this._onDeleteDraft, label: 'Discard' }))))));
 	        }
 	        else {
-	            addButton = React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry");
+	            footer = React.createElement(PFButton_1.PFButton, { type: "primary", onClick: this._onAddClick, label: 'Add Transaction' });
 	        }
 	        return (React.createElement("div", { className: "pf-card" },
 	            header,
 	            table,
-	            draftItem,
-	            addButton));
+	            React.createElement("div", { className: "margin-top-20" }, footer)));
 	    };
 	    return PFUnsoldStocks;
 	}(React.Component));
@@ -8076,7 +8156,6 @@
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
 	__webpack_require__(47);
-	var classNames = __webpack_require__(42);
 	var util_1 = __webpack_require__(43);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
@@ -8111,7 +8190,7 @@
 	    }
 	    PFAggregatedAssetRow.prototype.render = function () {
 	        var _this = this;
-	        // TODO: refactor the following code to use functions in the PFUnsoldAssetStore.
+	        // TODO: refactor the following code to use functions in the PFAssetStore.
 	        var expanded = this.state.expanded;
 	        var symbol = this.props.transactions[0].symbol;
 	        var symbolData = this.props.marketData[symbol];
@@ -8127,26 +8206,10 @@
 	            totalBasis += transaction.basis * transaction.quantity;
 	        });
 	        var symbolTotalDayChange = symbolDayChange !== null && symbolDayChange * totalQuantity || null;
-	        var dayChangeText = '...';
-	        if (symbolTotalDayChange !== null) {
-	            dayChangeText = util_1.formatInt(symbolTotalDayChange.toFixed(2));
-	            if (dayChangeText[0] !== '-') {
-	                dayChangeText = '+' + dayChangeText;
-	            }
-	        }
 	        var avgPrice = totalBasis / totalQuantity;
-	        var totalValue = curPrice === null ? null : (curPrice * totalQuantity);
-	        var overallGainPercent = curPrice && (curPrice - avgPrice) / avgPrice * 100 || null;
-	        var overallGainPercentText = '';
-	        if (overallGainPercent !== null) {
-	            overallGainPercentText = overallGainPercent.toFixed(2) + '%';
-	            if (overallGainPercentText[0] !== '-') {
-	                overallGainPercentText = '+' + overallGainPercentText;
-	            }
-	            overallGainPercentText = '(' + overallGainPercentText + ')';
-	        }
-	        var hasDayProfit = curPrice !== null && curPrice - lastClose > 1e-6;
-	        var hasDayLoss = curPrice !== null && curPrice - lastClose < 1e-6;
+	        var symbolMarketData = this.props.marketData[this.props.transactions[0].symbol];
+	        var assetValue = util_1.getNetAssetValue(this.props.transactions, symbolMarketData);
+	        var previousAssetValue = util_1.getNetAssetPrevCloseValue(this.props.transactions, symbolMarketData);
 	        var summaryRow = (React.createElement("div", { className: "pf-unsold-symbol-summary", onClick: this._onClick },
 	            React.createElement("div", { className: "pf-row-symbol" },
 	                React.createElement("div", null, symbol),
@@ -8156,60 +8219,38 @@
 	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: curPrice, previous: lastClose, showCurrentValue: true, showPercent: false })),
 	                React.createElement("div", { className: "pf-row-price-tag" },
 	                    React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode }))),
+	            React.createElement("div", { className: 'pf-row-day-change' },
+	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: symbolTotalDayChange, previous: 0, showPercent: false })),
 	            React.createElement("div", { className: "pf-row-avg-buy-price" },
-	                React.createElement("div", null, util_1.formatInt(avgPrice.toFixed(2))),
+	                React.createElement("div", null, util_1.formatFloat(avgPrice)),
 	                React.createElement("div", { className: "pf-row-quantity" },
 	                    "(",
 	                    util_1.formatInt(totalQuantity),
 	                    " stocks)")),
-	            React.createElement("div", { className: classNames({
-	                    'pf-row-day-change': true,
-	                    'pf-color-red': hasDayLoss,
-	                    'pf-color-green': hasDayProfit
-	                }) }, dayChangeText),
-	            React.createElement("div", { className: classNames({
-	                    'pf-row-overall-change': true,
-	                    'pf-color-red': curPrice !== null && totalValue < totalBasis,
-	                    'pf-color-green': curPrice !== null && totalValue > totalBasis
-	                }) },
-	                totalValue === null ? '...' : util_1.formatInt((totalValue - totalBasis).toFixed(2)),
-	                " ",
-	                overallGainPercentText),
+	            React.createElement("div", { className: "pf-row-symbol-net-value" },
+	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: assetValue, previous: previousAssetValue, showCurrentValue: true })),
 	            React.createElement("div", { className: "pf-row-actions" },
 	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
 	        return (React.createElement("div", { className: "pf-item", key: symbol },
 	            summaryRow,
 	            expanded ?
-	                React.createElement("div", { className: "pf-symbol-details" }, this.props.transactions.map(function (row, index) {
-	                    var overallGainText = curPrice ? util_1.formatInt(((curPrice - row.basis) * row.quantity).toFixed(2)) : '...';
-	                    var overallGainPercent = curPrice ? ((curPrice - row.basis) / row.basis * 100).toFixed(2) + '%' : '';
-	                    if (overallGainPercent) {
-	                        overallGainPercent = '(' + overallGainPercent + ')';
-	                    }
-	                    return (React.createElement("div", { className: "pf-symbol-detail-row", key: index },
-	                        React.createElement("div", { className: "pf-symbol-detail-buy-price" },
-	                            util_1.formatInt(row.quantity),
-	                            " stocks @ ",
-	                            util_1.formatInt(row.basis.toFixed(2))),
-	                        React.createElement("div", { className: classNames({
-	                                'pf-symbol-detail-day-change': true,
-	                                'pf-color-red': hasDayLoss,
-	                                'pf-color-green': hasDayProfit
-	                            }) }, symbolDayChange === null
-	                            ? '...'
-	                            : util_1.formatInt((symbolDayChange * row.quantity).toFixed(2))),
-	                        React.createElement("div", { className: classNames({
-	                                'pf-symbol-detail-overall-gain': true,
-	                                'pf-color-red': curPrice !== null && curPrice - row.basis < 1e-6,
-	                                'pf-color-green': curPrice !== null && curPrice - row.basis > 1e-6
-	                            }) },
-	                            " ",
-	                            overallGainText,
-	                            ' ',
-	                            overallGainPercent),
-	                        React.createElement("div", { className: "pf-row-actions" },
-	                            React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteClick(event, symbol, index); } }, "delete"))));
-	                }))
+	                React.createElement("div", { className: "pf-symbol-details" },
+	                    React.createElement("div", { className: "pf-symbol-details-header" },
+	                        React.createElement("div", { className: "pf-symbol-details-header-buy" }, "Buy"),
+	                        React.createElement("div", { className: "pf-symbol-details-header-gain" }, "Gain/Loss")),
+	                    this.props.transactions.map(function (row, index) {
+	                        var currentVal = curPrice ? curPrice * row.quantity : null;
+	                        var previousVal = curPrice ? row.basis * row.quantity : null;
+	                        return (React.createElement("div", { className: "pf-symbol-detail-row", key: index },
+	                            React.createElement("div", { className: "pf-symbol-detail-buy-price" },
+	                                util_1.formatInt(row.quantity),
+	                                " stocks @ ",
+	                                util_1.formatFloat(row.basis)),
+	                            React.createElement("div", { className: "pf-symbol-detail-overall-gain" },
+	                                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: currentVal, previous: previousVal, showPercent: false })),
+	                            React.createElement("div", { className: "pf-row-actions" },
+	                                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteClick(event, symbol, index); } }, "delete"))));
+	                    }))
 	                : null));
 	    };
 	    return PFAggregatedAssetRow;
@@ -8307,6 +8348,129 @@
 	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	    };
 	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(40);
+	var classNames = __webpack_require__(42);
+	var PFButton = /** @class */ (function (_super) {
+	    __extends(PFButton, _super);
+	    function PFButton() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFButton.prototype.render = function () {
+	        return (React.createElement("button", { className: classNames({
+	                'pf-button': true,
+	                'pf-primary-button': this.props.type === 'primary',
+	                'pf-button-small': this.props.size === 'small'
+	            }), onClick: this.props.onClick }, this.props.label));
+	    };
+	    return PFButton;
+	}(React.Component));
+	exports.PFButton = PFButton;
+
+
+/***/ }),
+/* 51 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(40);
+	var classNames = __webpack_require__(42);
+	var PFInput = /** @class */ (function (_super) {
+	    __extends(PFInput, _super);
+	    function PFInput() {
+	        var _this = _super !== null && _super.apply(this, arguments) || this;
+	        _this._onChange = function (evt) {
+	            _this.props.onChange(evt.target.value);
+	        };
+	        return _this;
+	    }
+	    PFInput.prototype.render = function () {
+	        var style = {};
+	        if (this.props.width) {
+	            style.width = this.props.width;
+	        }
+	        return (React.createElement("input", { className: classNames({
+	                'pf-input': true,
+	                'pf-input-small': this.props.size === 'small',
+	            }), value: this.props.value, onChange: this._onChange, placeholder: this.props.placeholder, style: style }));
+	    };
+	    return PFInput;
+	}(React.Component));
+	exports.PFInput = PFInput;
+
+
+/***/ }),
+/* 52 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
+	Object.defineProperty(exports, "__esModule", { value: true });
+	var React = __webpack_require__(6);
+	__webpack_require__(40);
+	var classNames = __webpack_require__(42);
+	var PFText = /** @class */ (function (_super) {
+	    __extends(PFText, _super);
+	    function PFText() {
+	        return _super !== null && _super.apply(this, arguments) || this;
+	    }
+	    PFText.prototype.render = function () {
+	        var color = '';
+	        switch (this.props.color) {
+	            case 'heading':
+	                color = '#1d2129';
+	                break;
+	            case 'secondary':
+	                color = '#939a9e';
+	                break;
+	        }
+	        return (React.createElement("div", { className: classNames({
+	                'pf-text': true,
+	                'pf-text-bold': this.props.weight === 'bold',
+	            }), style: { color: color, fontSize: this.props.size } }, this.props.children));
+	    };
+	    return PFText;
+	}(React.Component));
+	exports.PFText = PFText;
+
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || (function () {
+	    var extendStatics = Object.setPrototypeOf ||
+	        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+	        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+	    return function (d, b) {
+	        extendStatics(d, b);
+	        function __() { this.constructor = d; }
+	        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	    };
+	})();
 	var __assign = (this && this.__assign) || Object.assign || function(t) {
 	    for (var s, i = 1, n = arguments.length; i < n; i++) {
 	        s = arguments[i];
@@ -8320,7 +8484,7 @@
 	var React = __webpack_require__(6);
 	var PFAssetsStore_1 = __webpack_require__(26);
 	var PFMarketDataStore_1 = __webpack_require__(37);
-	var PFSoldStocks_1 = __webpack_require__(51);
+	var PFSoldStocks_1 = __webpack_require__(54);
 	var PFSoldStocksContainer = /** @class */ (function (_super) {
 	    __extends(PFSoldStocksContainer, _super);
 	    function PFSoldStocksContainer() {
@@ -8346,7 +8510,7 @@
 
 
 /***/ }),
-/* 51 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8362,11 +8526,14 @@
 	})();
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var React = __webpack_require__(6);
-	__webpack_require__(52);
+	__webpack_require__(55);
 	var pf_trade_items_1 = __webpack_require__(28);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
-	var PFAggregatedSoldAssetRow_1 = __webpack_require__(54);
+	var PFAggregatedSoldAssetRow_1 = __webpack_require__(57);
+	var PFButton_1 = __webpack_require__(50);
+	var PFInput_1 = __webpack_require__(51);
+	var PFText_1 = __webpack_require__(52);
 	var PFSoldStocks = /** @class */ (function (_super) {
 	    __extends(PFSoldStocks, _super);
 	    function PFSoldStocks() {
@@ -8440,24 +8607,27 @@
 	        var table = React.createElement("div", { className: "pf-table" }, Object.keys(this.props.quantityBySymbol).map(function (symbol) {
 	            return React.createElement(PFAggregatedSoldAssetRow_1.PFAggregatedSoldAssetRow, { key: symbol, symbolMetadata: _this.props.marketMetadata[symbol], transactions: _this.props.transactionsBySymbol.get(symbol), totalQuantity: _this.props.quantityBySymbol[symbol], totalBasis: _this.props.basisBySymbol[symbol], totalValue: _this.props.valueBySymbol[symbol] });
 	        }));
-	        var draftItem = null, addButton = null;
+	        var footer = null;
 	        if (this.state.draftItem) {
-	            draftItem = (React.createElement("div", { className: "pf-row" },
-	                React.createElement("input", { placeholder: "symbol", className: "pf-row-symbol", value: this.state.draftItem.symbol || '', onChange: function (event) { return _this._onDraftSymbolChange(event.target.value); } }),
-	                React.createElement("input", { placeholder: "quantity", className: "pf-row-quantity", value: this.state.draftItem.quantity, onChange: function (event) { return _this._onDraftQuantityChange(event.target.value); } }),
-	                React.createElement("input", { placeholder: "buying price", className: "pf-row-basis", value: this.state.draftItem.basis, onChange: function (event) { return _this._onDraftBasisChange(event.target.value); } }),
-	                React.createElement("input", { placeholder: "sell price", className: "pf-row-sell-price", value: this.state.draftItem.sellPrice, onChange: function (event) { return _this._onDraftSellPriceChange(event.target.value); } }),
-	                React.createElement("button", { onClick: this._onSaveClick }, "Save"),
-	                React.createElement("button", { onClick: this._onDeleteDraft }, "Delete")));
+	            footer = (React.createElement("div", null,
+	                React.createElement(PFText_1.PFText, { weight: 'bold', size: 14, color: 'heading' }, "Add Transaction"),
+	                React.createElement("div", { className: 'pf-sold-draft-row' },
+	                    React.createElement("div", { className: 'pf-sold-draft-row-inputs' },
+	                        React.createElement(PFInput_1.PFInput, { placeholder: "symbol", value: this.state.draftItem.symbol || '', onChange: function (value) { return _this._onDraftSymbolChange(value); } }),
+	                        React.createElement(PFInput_1.PFInput, { placeholder: "quantity", value: this.state.draftItem.quantity, onChange: function (value) { return _this._onDraftQuantityChange(value); } }),
+	                        React.createElement(PFInput_1.PFInput, { placeholder: "buying price", value: this.state.draftItem.basis, onChange: function (value) { return _this._onDraftBasisChange(value); } }),
+	                        React.createElement(PFInput_1.PFInput, { placeholder: "sell price", value: this.state.draftItem.sellPrice, onChange: function (value) { return _this._onDraftSellPriceChange(value); } })),
+	                    React.createElement("div", null,
+	                        React.createElement(PFButton_1.PFButton, { type: "primary", onClick: this._onSaveClick, label: 'Save' }),
+	                        React.createElement(PFButton_1.PFButton, { onClick: this._onDeleteDraft, label: 'Delete' })))));
 	        }
 	        else {
-	            addButton = React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry");
+	            footer = React.createElement(PFButton_1.PFButton, { type: "primary", onClick: this._onAddClick, label: 'Add Entry' });
 	        }
 	        return (React.createElement("div", { className: "pf-card" },
 	            header,
 	            table,
-	            draftItem,
-	            addButton));
+	            React.createElement("div", { className: "margin-top-20" }, footer)));
 	    };
 	    return PFSoldStocks;
 	}(React.Component));
@@ -8465,14 +8635,14 @@
 
 
 /***/ }),
-/* 52 */
+/* 55 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 53 */,
-/* 54 */
+/* 56 */,
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8549,21 +8719,56 @@
 
 
 /***/ }),
-/* 55 */
+/* 58 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 56 */,
-/* 57 */
+/* 59 */,
+/* 60 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 58 */,
-/* 59 */
+/* 61 */,
+/* 62 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 63 */,
+/* 64 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 65 */,
+/* 66 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 67 */,
+/* 68 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 69 */,
+/* 70 */
+/***/ (function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 71 */,
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8590,7 +8795,7 @@
 	var React = __webpack_require__(6);
 	var PFMarketDataStore_1 = __webpack_require__(37);
 	var PFWatchlistStore_1 = __webpack_require__(36);
-	var PFWatchlist_1 = __webpack_require__(60);
+	var PFWatchlist_1 = __webpack_require__(73);
 	var PFWatchlistContainer = /** @class */ (function (_super) {
 	    __extends(PFWatchlistContainer, _super);
 	    function PFWatchlistContainer() {
@@ -8616,7 +8821,7 @@
 
 
 /***/ }),
-/* 60 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -8636,6 +8841,8 @@
 	var PFMarketNumber_1 = __webpack_require__(39);
 	var PFDispatcher_1 = __webpack_require__(29);
 	var PFActionTypes_1 = __webpack_require__(32);
+	var PFInput_1 = __webpack_require__(51);
+	var PFButton_1 = __webpack_require__(50);
 	var PFWatchlist = /** @class */ (function (_super) {
 	    __extends(PFWatchlist, _super);
 	    function PFWatchlist() {
@@ -8674,12 +8881,13 @@
 	                    React.createElement("div", null, symbol),
 	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: curPrice, previous: lastPrice, showCurrentValue: true })));
 	            })),
-	            this.state.draft === null ?
-	                React.createElement("button", { style: { marginTop: '16px' }, onClick: this._onAddClick }, "Add Entry") :
+	            React.createElement("div", { style: { marginTop: 12 } }, this.state.draft === null ?
+	                React.createElement(PFButton_1.PFButton, { size: "small", type: "primary", onClick: this._onAddClick, label: 'Add Entry' }) :
 	                React.createElement("div", { className: "pf-watchlist-input-row" },
-	                    React.createElement("input", { placeholder: "symbol", className: "pf-watchlist-symbol-input", value: this.state.draft || '', onChange: function (event) { return _this.setState({ draft: event.target.value }); } }),
-	                    React.createElement("button", { onClick: this._onSaveClick }, "Save"),
-	                    React.createElement("button", { onClick: this._onDeleteDraft }, "Delete"))));
+	                    React.createElement(PFInput_1.PFInput, { size: "small", placeholder: "Symbol", width: 60, value: this.state.draft || '', onChange: function (value) { return _this.setState({ draft: value }); } }),
+	                    React.createElement("div", null,
+	                        React.createElement(PFButton_1.PFButton, { type: "primary", size: "small", onClick: this._onSaveClick, label: 'Save' }),
+	                        React.createElement(PFButton_1.PFButton, { size: "small", onClick: this._onDeleteDraft, label: 'Cancel' }))))));
 	    };
 	    return PFWatchlist;
 	}(React.Component));
