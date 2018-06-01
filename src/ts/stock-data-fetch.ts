@@ -11,7 +11,6 @@ export function fetchAndUpdateStockData(symbols: string[] = []) {
     .concat(PFWatchlistStore.getState().symbols)
     .concat(symbols)
     .toArray();
-  console.log(symbols);
   return fetchStockData(allSymbols as string[]).then(result => {
     PFDispatcher.dispatch({
       type: PFActionTypes.MARKET_DATA_UPDATE,
