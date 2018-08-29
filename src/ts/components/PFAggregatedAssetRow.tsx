@@ -4,7 +4,7 @@ import {PFSymbolToMetadata, PFSymbolToStockDataPoint, PriceDisplayMode} from '..
 import '../../css/pf-aggregated-row.less';
 
 import classNames = require('classnames');
-import {formatFloat, formatInt, getNetAssetPrevCloseValue, getNetAssetValue} from '../util';
+import {formatFloat, formatInt, getNetAssetPrevCloseValue, getNetAssetValue, getUnsoldCostBasis} from '../util';
 import {PFDispatcher} from '../dispatcher/PFDispatcher';
 import PFActionTypes from '../types/PFActionTypes';
 import {PFStockPriceTag} from './PFStockPriceTag';
@@ -74,7 +74,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
 
     const symbolMarketData = this.props.marketData[this.props.transactions[0].symbol];
     const assetValue = getNetAssetValue(this.props.transactions, symbolMarketData);
-    const previousAssetValue = getNetAssetPrevCloseValue(this.props.transactions, symbolMarketData);
+    const totalCostBasis = getUnsoldCostBasis(this.props.transactions);
 
     const summaryRow = (<div className="pf-unsold-symbol-summary" onClick={this._onClick}>
       <div className="pf-row-symbol">
@@ -91,16 +91,16 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
                            priceDisplayMode={this.props.priceDisplayMode}/>
         </div>
       </div>
-      <div
-        className={'pf-row-day-change'}>
-        <PFMarketNumber current={symbolTotalDayChange} previous={0} showPercent={false}/>
-      </div>
       <div className="pf-row-avg-buy-price">
         <div>{formatFloat(avgPrice)}</div>
         <div className="pf-row-quantity">({formatInt(totalQuantity)} stocks)</div>
       </div>
-      <div className="pf-row-symbol-net-value">
-        <PFMarketNumber current={assetValue} previous={previousAssetValue} showCurrentValue={true}/>
+      <div
+        className={'pf-row-day-change'}>
+        <PFMarketNumber current={symbolTotalDayChange} previous={0} showPercent={false}/>
+      </div>
+      <div className="pf-row-symbol-overall-gain">
+        <PFMarketNumber current={assetValue} previous={totalCostBasis}/>
       </div>
       <div className="pf-row-actions">
         <a href="#" onClick={(event) => this._onRowDeleteAllClick(event, symbol)}>delete</a>
@@ -123,7 +123,7 @@ export class PFAggregatedAssetRow extends React.Component<Props, State> {
                   {formatInt(row.quantity)} stocks @ {formatFloat(row.basis)}
                 </div>
                 <div className="pf-symbol-detail-overall-gain">
-                  <PFMarketNumber current={currentVal} previous={previousVal} showPercent={false} />
+                  <PFMarketNumber current={currentVal} previous={previousVal} showPercent={false}/>
                 </div>
                 <div className="pf-row-actions">
                   <a href="#" onClick={(event) => this._onRowDeleteClick(event, symbol, index)}>delete</a>

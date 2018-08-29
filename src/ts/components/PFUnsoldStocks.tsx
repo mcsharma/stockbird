@@ -31,31 +31,6 @@ export class PFUnsoldStocks extends React.Component<Props> {
     });
   };
 
-  _onDeleteRow = (symbol, index) => {
-    PFDispatcher.dispatch({
-      type: PFActionTypes.UNSOLD_DELETE_ROW,
-      symbol,
-      index,
-    });
-  };
-
-  _onQuantityChange = (symbol, index, value) => {
-    PFDispatcher.dispatch({
-      type: PFActionTypes.UNSOLD_QUANTITY_UPDATE,
-      symbol,
-      index,
-      value,
-    });
-  };
-
-  _onBasisChange = (symbol, index, value) => {
-    PFDispatcher.dispatch({
-      type: PFActionTypes.UNSOLD_BASIS_UPDATE,
-      symbol,
-      index,
-      value,
-    });
-  };
 
   _onDraftSymbolChange = (value) => {
     PFDispatcher.dispatch({
@@ -88,9 +63,9 @@ export class PFUnsoldStocks extends React.Component<Props> {
     const header = <div className="pf-table-header">
       <div className="pf-header-symbol">Symbol</div>
       <div className="pf-header-price">Current Price</div>
-      <div className="pf-header-day-change">Day Change</div>
       <div className="pf-header-avg-buy-price">Avg Buy Price</div>
-      <div className="pf-header-overall-change">Current Value</div>
+      <div className="pf-header-day-change">Day Change</div>
+      <div className="pf-header-overall-change">Overall Gain</div>
       <div className="pf-header-actions">Actions</div>
     </div>;
     const table = <div className="pf-table">

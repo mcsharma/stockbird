@@ -43,6 +43,17 @@ export function getNetAssetValue(transactions: PFTradeItem[], marketData?: Stock
   return ans;
 }
 
+export function getUnsoldCostBasis(transactions: PFTradeItem[]) {
+  let ans = 0;
+  transactions.forEach((transaction) => {
+    if (transaction.sellPrice === null) {
+      ans += transaction.quantity * transaction.basis;
+    }
+  });
+  return ans;
+}
+
+
 export function getNetAssetPrevCloseValue(transactions: PFTradeItem[], marketData?: StockDataPoint) {
   let ans = 0;
   if (!marketData) {

@@ -7938,6 +7938,16 @@
 	    return ans;
 	}
 	exports.getNetAssetValue = getNetAssetValue;
+	function getUnsoldCostBasis(transactions) {
+	    var ans = 0;
+	    transactions.forEach(function (transaction) {
+	        if (transaction.sellPrice === null) {
+	            ans += transaction.quantity * transaction.basis;
+	        }
+	    });
+	    return ans;
+	}
+	exports.getUnsoldCostBasis = getUnsoldCostBasis;
 	function getNetAssetPrevCloseValue(transactions, marketData) {
 	    var ans = 0;
 	    if (!marketData) {
@@ -8044,29 +8054,6 @@
 	                type: PFActionTypes_1.default.UNSOLD_DRAFT_SAVE,
 	            });
 	        };
-	        _this._onDeleteRow = function (symbol, index) {
-	            PFDispatcher_1.PFDispatcher.dispatch({
-	                type: PFActionTypes_1.default.UNSOLD_DELETE_ROW,
-	                symbol: symbol,
-	                index: index,
-	            });
-	        };
-	        _this._onQuantityChange = function (symbol, index, value) {
-	            PFDispatcher_1.PFDispatcher.dispatch({
-	                type: PFActionTypes_1.default.UNSOLD_QUANTITY_UPDATE,
-	                symbol: symbol,
-	                index: index,
-	                value: value,
-	            });
-	        };
-	        _this._onBasisChange = function (symbol, index, value) {
-	            PFDispatcher_1.PFDispatcher.dispatch({
-	                type: PFActionTypes_1.default.UNSOLD_BASIS_UPDATE,
-	                symbol: symbol,
-	                index: index,
-	                value: value,
-	            });
-	        };
 	        _this._onDraftSymbolChange = function (value) {
 	            PFDispatcher_1.PFDispatcher.dispatch({
 	                type: PFActionTypes_1.default.UNSOLD_DRAFT_SYMBOL_UPDATE,
@@ -8097,9 +8084,9 @@
 	        var header = React.createElement("div", { className: "pf-table-header" },
 	            React.createElement("div", { className: "pf-header-symbol" }, "Symbol"),
 	            React.createElement("div", { className: "pf-header-price" }, "Current Price"),
-	            React.createElement("div", { className: "pf-header-day-change" }, "Day Change"),
 	            React.createElement("div", { className: "pf-header-avg-buy-price" }, "Avg Buy Price"),
-	            React.createElement("div", { className: "pf-header-overall-change" }, "Current Value"),
+	            React.createElement("div", { className: "pf-header-day-change" }, "Day Change"),
+	            React.createElement("div", { className: "pf-header-overall-change" }, "Overall Gain"),
 	            React.createElement("div", { className: "pf-header-actions" }, "Actions"));
 	        var table = React.createElement("div", { className: "pf-table" }, this.props.assets.map(function (assetRows) {
 	            if (assetRows.length === 0) {
@@ -8209,7 +8196,7 @@
 	        var avgPrice = totalBasis / totalQuantity;
 	        var symbolMarketData = this.props.marketData[this.props.transactions[0].symbol];
 	        var assetValue = util_1.getNetAssetValue(this.props.transactions, symbolMarketData);
-	        var previousAssetValue = util_1.getNetAssetPrevCloseValue(this.props.transactions, symbolMarketData);
+	        var totalCostBasis = util_1.getUnsoldCostBasis(this.props.transactions);
 	        var summaryRow = (React.createElement("div", { className: "pf-unsold-symbol-summary", onClick: this._onClick },
 	            React.createElement("div", { className: "pf-row-symbol" },
 	                React.createElement("div", null, symbol),
@@ -8219,16 +8206,16 @@
 	                    React.createElement(PFMarketNumber_1.PFMarketNumber, { current: curPrice, previous: lastClose, showCurrentValue: true, showPercent: false })),
 	                React.createElement("div", { className: "pf-row-price-tag" },
 	                    React.createElement(PFStockPriceTag_1.PFStockPriceTag, { price: curPrice, previousClose: lastClose, priceDisplayMode: this.props.priceDisplayMode }))),
-	            React.createElement("div", { className: 'pf-row-day-change' },
-	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: symbolTotalDayChange, previous: 0, showPercent: false })),
 	            React.createElement("div", { className: "pf-row-avg-buy-price" },
 	                React.createElement("div", null, util_1.formatFloat(avgPrice)),
 	                React.createElement("div", { className: "pf-row-quantity" },
 	                    "(",
 	                    util_1.formatInt(totalQuantity),
 	                    " stocks)")),
-	            React.createElement("div", { className: "pf-row-symbol-net-value" },
-	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: assetValue, previous: previousAssetValue, showCurrentValue: true })),
+	            React.createElement("div", { className: 'pf-row-day-change' },
+	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: symbolTotalDayChange, previous: 0, showPercent: false })),
+	            React.createElement("div", { className: "pf-row-symbol-overall-gain" },
+	                React.createElement(PFMarketNumber_1.PFMarketNumber, { current: assetValue, previous: totalCostBasis })),
 	            React.createElement("div", { className: "pf-row-actions" },
 	                React.createElement("a", { href: "#", onClick: function (event) { return _this._onRowDeleteAllClick(event, symbol); } }, "delete"))));
 	        return (React.createElement("div", { className: "pf-item", key: symbol },
